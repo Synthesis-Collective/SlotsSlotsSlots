@@ -23,7 +23,7 @@ namespace SlotsSlotsSlots
             });
             
         }
-
+        
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
 
@@ -31,12 +31,7 @@ namespace SlotsSlotsSlots
                 state.LoadOrder.PriorityOrder.Race().WinningOverrides()
                     .Where(r => r.HasKeyword(Skyrim.Keyword.ActorTypeNPC))
                     .Select(r => r.DeepCopy())
-                    .Do(r =>
-                    {
-                        r.BaseCarryWeight = 50.0f;
-                        Console.WriteLine($"Set BaseCarryWeight {r.Name}");
-                    })
-            );
+                    .Do(r => r.BaseCarryWeight = 50.0f));
 
             state.PatchMod.MiscItems.Set(
                 state.LoadOrder.PriorityOrder.MiscItem().WinningOverrides()
