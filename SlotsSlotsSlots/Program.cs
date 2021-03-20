@@ -29,7 +29,12 @@ namespace SlotsSlotsSlots
 
             state.PatchMod.Races.Set(
                 state.LoadOrder.PriorityOrder.Race().WinningOverrides()
-                    .Where(r => r.HasKeyword(Skyrim.Keyword.ActorTypeNPC))
+                    .Where(r => r.HasKeyword(Skyrim.Keyword.ActorTypeNPC) 
+                                             && !(r.EditorID.Equals("InvisibleRace")
+                                                || r.EditorID.Equals("ElderRace")
+                                                || r.EditorID.Equals("ElderRaceVampire")
+                                                || r.HasKeyword(Skyrim.Keyword.ActorTypeDaedra)
+                                                ))
                     .Select(r => r.DeepCopy())
                     .Do(r =>
                     {
