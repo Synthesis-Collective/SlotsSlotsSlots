@@ -47,7 +47,17 @@ namespace SlotsSlotsSlots
                 state.LoadOrder.PriorityOrder.MiscItem().WinningOverrides()
                     .Select(m => m.DeepCopy())
                     .Do(m => m.Weight = 0.0f));
-            
+
+            state.PatchMod.Ingestibles.Set(
+                state.LoadOrder.PriorityOrder.Ingestible().WinningOverrides()
+                    .Select(m => m.DeepCopy())
+                    .Do(m => m.Weight = 0.0f));
+
+            state.PatchMod.Ingredients.Set(
+                state.LoadOrder.PriorityOrder.Ingredient().WinningOverrides()
+                    .Select(m => m.DeepCopy())
+                    .Do(m => m.Weight = 0.0f));
+
             state.PatchMod.Books.Set(
                 state.LoadOrder.PriorityOrder.Book().WinningOverrides()
                     .Select(m => m.DeepCopy())
