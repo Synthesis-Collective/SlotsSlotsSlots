@@ -38,8 +38,8 @@ namespace SlotsSlotsSlots
                     .Select(r => r.DeepCopy())
                     .Do(r =>
                     {
-                        r.BaseCarryWeight = 50.0f;
-                        Console.WriteLine($"Set BaseCarryWeight {r.Name}");
+                        r.BaseCarryWeight = 25.0f;
+                        Console.WriteLine($"Set BaseCarryWeight for {r.Name} to {r.BaseCarryWeight}");
                     })
             );
 
