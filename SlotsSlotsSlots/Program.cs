@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Synthesis;
+using Mutagen.Bethesda.FormKeys.SkyrimSE;
 
 namespace SlotsSlotsSlots
 {
@@ -25,11 +26,38 @@ namespace SlotsSlotsSlots
         
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
+
+            state.PatchMod.Races.Set(
+                state.LoadOrder.PriorityOrder.Race().WinningOverrides()
+                    .Where(r => r.HasKeyword(Skyrim.Keyword.ActorTypeNPC) 
+                                             && !(r.EditorID.Equals("InvisibleRace")
+                                                || r.EditorID.Equals("ElderRace")
+                                                || r.EditorID.Equals("ElderRaceVampire")
+                                                || r.HasKeyword(Skyrim.Keyword.ActorTypeDaedra)
+                                                ))
+                    .Select(r => r.DeepCopy())
+                    .Do(r =>
+                    {
+                        r.BaseCarryWeight = 25.0f;
+                        Console.WriteLine($"Set BaseCarryWeight for {r.Name} to {r.BaseCarryWeight}");
+                    })
+            );
+
             state.PatchMod.MiscItems.Set(
                 state.LoadOrder.PriorityOrder.MiscItem().WinningOverrides()
                     .Select(m => m.DeepCopy())
                     .Do(m => m.Weight = 0.0f));
-            
+
+            state.PatchMod.Ingestibles.Set(
+                state.LoadOrder.PriorityOrder.Ingestible().WinningOverrides()
+                    .Select(m => m.DeepCopy())
+                    .Do(m => m.Weight = 0.0f));
+
+            state.PatchMod.Ingredients.Set(
+                state.LoadOrder.PriorityOrder.Ingredient().WinningOverrides()
+                    .Select(m => m.DeepCopy())
+                    .Do(m => m.Weight = 0.0f));
+
             state.PatchMod.Books.Set(
                 state.LoadOrder.PriorityOrder.Book().WinningOverrides()
                     .Select(m => m.DeepCopy())
@@ -111,5 +139,6 @@ namespace SlotsSlotsSlots
 
             return output;
         }
+
     }
 }
