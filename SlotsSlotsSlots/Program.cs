@@ -13,19 +13,16 @@ namespace SlotsSlotsSlots
     {
         public static async Task<int> Main(string[] args)
         {
-            return await SynthesisPipeline.Instance.AddPatch<ISkyrimMod, ISkyrimModGetter>(RunPatch).Run(args, new RunPreferences()
-            {
-                ActionsForEmptyArgs = new RunDefaultPatcher()
-                {
-                    IdentifyingModKey = "SlotsSlotsSlots.esp",
-                    TargetRelease = GameRelease.SkyrimSE,
-                }
-            });
-            
+            return await SynthesisPipeline.Instance
+                .AddPatch<ISkyrimMod, ISkyrimModGetter>(RunPatch)
+                .SetTypicalOpen(GameRelease.SkyrimSE, "SlotsSlotsSlots.esp")
+                .Run(args);
         }
         
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
+
+            var carryWeightEffects = carryWeightMagicEffects(state);
 
             state.PatchMod.Races.Set(
                 state.LoadOrder.PriorityOrder.Race().WinningOverrides()
@@ -42,6 +39,29 @@ namespace SlotsSlotsSlots
                         Console.WriteLine($"Set BaseCarryWeight for {r.Name} to {r.BaseCarryWeight}");
                     })
             );
+
+            state.PatchMod.Spells.Set(state.LoadOrder.PriorityOrder.Spell().WinningOverrides()
+                .Where(spell =>
+                {
+                    foreach (var carryWeightEffect in carryWeightEffects)
+                    {
+                        return spell.Effects.Any(e => e.BaseEffect.Equals(carryWeightEffect));
+                    }
+                    return false;
+                })
+                .Select(s => s.DeepCopy())
+                .Do(spell =>
+                {
+                    var effects = spell.Effects;
+
+                    foreach (var carryWeightEffect in carryWeightEffects)
+                    {
+                        spell.Effects.Do(e =>
+                        {
+                            if (e.BaseEffect.Equals(carryWeightEffect)) e.Data.Magnitude = e.Data.Magnitude/6;
+                        });
+                    }
+                }));
 
             state.PatchMod.MiscItems.Set(
                 state.LoadOrder.PriorityOrder.MiscItem().WinningOverrides()
@@ -138,6 +158,18 @@ namespace SlotsSlotsSlots
             }
 
             return output;
+        }
+
+        private static HashSet<IFormLinkGetter<IMagicEffectGetter>> carryWeightMagicEffects(IPatcherState<ISkyrimMod, ISkyrimModGetter>  state)
+        {
+            var foundEffects = new HashSet<IFormLinkGetter<IMagicEffectGetter>>();
+            state.LoadOrder.PriorityOrder.MagicEffect().WinningOverrides()
+                .Where(e => e.Archetype.ActorValue.Equals("Carry Weight"))
+                .Do(e =>
+                {
+                    foundEffects.Add(e.AsLink());
+                });
+            return foundEffects;
         }
 
     }
