@@ -38,18 +38,15 @@ namespace SlotsSlotsSlots
             );
 
             Console.WriteLine("Patching Spells:");
+
             var carryWeightEffects = MagicEffects(state).Item1;
+
             var healthMagicEffects = MagicEffects(state).Item2;
+
             var carryWeightSpells = new HashSet<(IFormLinkGetter<ISpellGetter>, int)>();
+
             state.PatchMod.Spells.Set(state.LoadOrder.PriorityOrder.Spell().WinningOverrides()
-                .Where(spell =>
-                {
-                    foreach (var carryWeightEffect in carryWeightEffects)
-                    {
-                        if (spell.Effects.Any(e => e.BaseEffect.Equals(carryWeightEffect))) return true;
-                    }
-                    return false;
-                })
+                .Where(spell => spell.Effects.Any(e => carryWeightEffects.Contains(e.BaseEffect)))
                 .Select(s => s.DeepCopy())
                 .Do(spell =>
                 {
@@ -69,18 +66,19 @@ namespace SlotsSlotsSlots
                     }
                 }));
 
+            var carryWeightSpellsItem1 = carryWeightSpells.Select(x => x.Item1).ToHashSet();
+
             Console.WriteLine("Patching Perk Descriptions.");
             state.PatchMod.Perks.Set(
                 state.LoadOrder.PriorityOrder.Perk().WinningOverrides()
-                    .Where(p =>
+                    .Where(p => //This could potentially be shortened.
                     {
                         foreach (var carryWeightSpell in carryWeightSpells)
                         {
-                            if (p.Effects.Any(e => e.ContainedFormLinks.Any(a => a.FormKey.Equals(carryWeightSpell.Item1)))) return true;
+                            if (p.Effects.Any(e => e.ContainedFormLinks.Any(a => a.FormKey.Equals(carryWeightSpell.Item1.FormKey)))) return true;
                         }
                         return false;
-                    }
-                    )
+                    })
                     .Select(p => p.DeepCopy())
                     .Do(p =>
                     {
@@ -88,7 +86,7 @@ namespace SlotsSlotsSlots
                         {
                             p.Effects.Do(e =>
                             {
-                                if (p.Effects.Any(e => e.ContainedFormLinks.Any(a => a.FormKey.Equals(carryWeightSpell.Item1))))
+                                if (p.Effects.Any(e => e.ContainedFormLinks.Any(a => a.FormKey.Equals(carryWeightSpell.Item1.FormKey))))
                                 {
                                     if (p.Effects.Count > 1)
                                     {
@@ -116,19 +114,7 @@ namespace SlotsSlotsSlots
             state.PatchMod.Ingestibles.Set(
                 state.LoadOrder.PriorityOrder.Ingestible().WinningOverrides()
                     .Where(i => i.Weight != 0.0f
-                        || i.Effects
-                        .Any(e =>
-                        {
-                            foreach (var carryWeightEffect in carryWeightEffects)
-                            {
-                                if (e.BaseEffect.Equals(carryWeightEffect)) return true;
-                            }
-                            foreach(var healtMagicEffect in healthMagicEffects)
-                            {
-                                if (e.BaseEffect.Equals(healtMagicEffect)) return true;
-                            }
-                            return false;
-                        }))
+                        || i.Effects.Any(e => carryWeightEffects.Contains(e.BaseEffect) || healthMagicEffects.Contains(e.BaseEffect)))
                     .Select(i => i.DeepCopy())
                     .Do(i => 
                     {
@@ -167,29 +153,18 @@ namespace SlotsSlotsSlots
             Console.WriteLine("Patching Object Effects.");
             state.PatchMod.ObjectEffects.Set(
                 state.LoadOrder.PriorityOrder.ObjectEffect().WinningOverrides()
-                    .Where(i => i.Effects
-                        .Any(e =>
-                        {
-                            foreach (var carryWeightEffect in carryWeightEffects)
-                            {
-                                if (e.BaseEffect.Equals(carryWeightEffect)) return true;
-                            }
-                            return false;
-                        }))
+                    .Where(i => i.Effects.Any(e => carryWeightEffects.Contains(e.BaseEffect)))
                     .Select(m => m.DeepCopy())
                     .Do(i =>
-                    {
-                        foreach (var carryWeightEffect in carryWeightEffects)
+                    {                        
+                        i.Effects.Do(e =>
                         {
-                            i.Effects.Do(e =>
-                            {
-                                if (e.BaseEffect.Equals(carryWeightEffect))
-                                {
-                                    Console.WriteLine($"{i.Name} Strenth: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplyer}");
-                                    e.Data.Magnitude *= effectMultiplyer;
-                                }
-                            });
-                        }
+                            if (carryWeightEffects.Contains(e.BaseEffect))
+                            { 
+                                Console.WriteLine($"{i.Name} Strenth: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplyer}");
+                                e.Data.Magnitude *= effectMultiplyer;
+                            }
+                        });
                     }));
             Console.WriteLine("Patching Object Effects done.");
 
@@ -197,15 +172,7 @@ namespace SlotsSlotsSlots
             state.PatchMod.Ingredients.Set(
                 state.LoadOrder.PriorityOrder.Ingredient().WinningOverrides()
                     .Where(i => i.Weight != 0.0f
-                        || i.Effects
-                        .Any(e =>
-                        {
-                            foreach (var carryWeightEffect in carryWeightEffects)
-                            {
-                                if ( e.BaseEffect.Equals(carryWeightEffect)) return true;
-                            }
-                            return false;
-                        }))
+                        || i.Effects.Any(e => carryWeightEffects.Contains(e.BaseEffect)))
                     .Select(i => i.DeepCopy())
                     .Do(i =>
                     {
@@ -315,26 +282,23 @@ namespace SlotsSlotsSlots
             return output;
         }
 
-        private static (HashSet<IFormLinkGetter<IMagicEffectGetter>>,HashSet<IFormLinkGetter<IMagicEffectGetter>>) MagicEffects(IPatcherState<ISkyrimMod, ISkyrimModGetter>  state)
+        private static (HashSet<IFormLinkGetter<IMagicEffectGetter>>, HashSet<IFormLinkGetter<IMagicEffectGetter>>) MagicEffects(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
             var foundCarryWeight = new HashSet<IFormLinkGetter<IMagicEffectGetter>>();
             var foundHealth = new HashSet<IFormLinkGetter<IMagicEffectGetter>>();
             state.LoadOrder.PriorityOrder.MagicEffect().WinningOverrides()
                 .Do(e =>
                 {
-                    if (e.Archetype.ActorValue.Equals("Carry Weight"))
+                    if (e.Archetype.ActorValue.Equals(ActorValue.CarryWeight))
                     {
                         foundCarryWeight.Add(e.AsLink());
                     }
-                    if (e.Archetype.ActorValue.Equals("Carry Weight"))
+                    if (e.Archetype.ActorValue.Equals(ActorValue.Health))
                     {
                         foundHealth.Add(e.AsLink());
                     }
                 });
-            return (foundCarryWeight,foundHealth);
+            return (foundCarryWeight, foundHealth);
         }
-
-
-
     }
 }
