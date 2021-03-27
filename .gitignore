@@ -1,0 +1,24 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/SlotsSlotsSlots/obj/SlotsSlotsSlots.csproj.nuget.g.targets
+/SlotsSlotsSlots/obj/SlotsSlotsSlots.csproj.nuget.g.props
+/SlotsSlotsSlots/obj/SlotsSlotsSlots.csproj.nuget.dgspec.json
+/SlotsSlotsSlots/obj/Release/net5.0/SlotsSlotsSlots.GeneratedMSBuildEditorConfig.editorconfig
+/SlotsSlotsSlots/obj/Release/net5.0/SlotsSlotsSlots.assets.cache
+/SlotsSlotsSlots/obj/Release/net5.0/SlotsSlotsSlots.AssemblyInfoInputs.cache
+/SlotsSlotsSlots/obj/Release/net5.0/SlotsSlotsSlots.AssemblyInfo.cs
+/SlotsSlotsSlots/obj/Release/net5.0/.NETCoreApp,Version=v5.0.AssemblyAttributes.cs
+/SlotsSlotsSlots/obj/project.nuget.cache
+/SlotsSlotsSlots/obj/project.assets.json
+/SlotsSlotsSlots/obj/Debug/net5.0/SlotsSlotsSlots.GeneratedMSBuildEditorConfig.editorconfig
+/SlotsSlotsSlots/obj/Debug/net5.0/SlotsSlotsSlots.csprojAssemblyReference.cache
+/SlotsSlotsSlots/obj/Debug/net5.0/SlotsSlotsSlots.assets.cache
+/SlotsSlotsSlots/obj/Debug/net5.0/SlotsSlotsSlots.AssemblyInfoInputs.cache
+/SlotsSlotsSlots/obj/Debug/net5.0/SlotsSlotsSlots.AssemblyInfo.cs
+/SlotsSlotsSlots/obj/Debug/net5.0/.NETCoreApp,Version=v5.0.AssemblyAttributes.cs
+/.vs/VSWorkspaceState.json
+/.vs/SlotsSlotsSlots/v16/.suo
+/.vs/SlotsSlotsSlots/DesignTimeBuild/.dtbcache.v2
+/.vs/slnx.sqlite
