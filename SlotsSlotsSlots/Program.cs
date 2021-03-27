@@ -40,27 +40,28 @@ namespace SlotsSlotsSlots
             Console.WriteLine("Patching Spells:");
 
             var carryWeightEffects = MagicEffects(state).Item1;
+            var carryWeightEffectFormKeys = carryWeightEffects.Select(x => x.FormKey).ToHashSet();
 
             var healthMagicEffects = MagicEffects(state).Item2;
 
             var carryWeightSpells = new HashSet<(IFormLinkGetter<ISpellGetter>, int)>();
 
             state.PatchMod.Spells.Set(state.LoadOrder.PriorityOrder.Spell().WinningOverrides()
-                .Where(spell => spell.Effects.Any(e => carryWeightEffects.Contains(e.BaseEffect)))
+                .Where(spell => spell.Effects.Any(e => carryWeightEffectFormKeys.Contains(e.BaseEffect.FormKey)))
                 .Select(s => s.DeepCopy())
                 .Do(spell =>
                 {
                     foreach (var carryWeightEffect in carryWeightEffects)
                     {
+                        Console.WriteLine($"{carryWeightEffect}");
                         spell.Effects.Do(e =>
                         {
-                            if (e.BaseEffect.Equals(carryWeightEffect))
+                            if (e.BaseEffect.FormKey.Equals(carryWeightEffect))
                             {
                                 Console.WriteLine($"{spell.Name} Strenth: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplyer}");
                                 e.Data.Magnitude *= effectMultiplyer;
-                                string changeNote = $"\n This alters your inventory space by {e.Data.Magnitude} Slots.";
                                 carryWeightSpells.Add((spell.AsLink(), (int)e.Data.Magnitude));
-                                spell.Description += changeNote;
+                                spell.Description += $"\n This alters your inventory space by {e.Data.Magnitude} Slots.";
                             }
                         });
                     }
