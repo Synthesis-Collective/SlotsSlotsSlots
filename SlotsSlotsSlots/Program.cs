@@ -51,7 +51,7 @@ namespace SlotsSlotsSlots
                 .Select(s => s.DeepCopy())
                 .Do(spell =>
                 {
-                    foreach (var carryWeightEffect in carryWeightEffects)
+                    foreach (var carryWeightEffect in carryWeightEffectFormKeys)
                     {
                         Console.WriteLine($"{carryWeightEffect}");
                         spell.Effects.Do(e =>
