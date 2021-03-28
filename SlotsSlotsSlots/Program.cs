@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Noggog;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Synthesis;
@@ -39,24 +40,25 @@ namespace SlotsSlotsSlots
 
             Console.WriteLine("Patching Spells:");
 
-            var carryWeightEffects = MagicEffects(state).Item1;
-            var carryWeightEffectFormKeys = carryWeightEffects.Select(x => x.FormKey).ToHashSet();
+            var magicEffects = MagicEffects(state);
+            var carryWeightEffects = magicEffects.Item1;
+            //var carryWeightEffectFormKeys = carryWeightEffects.Select(x => x.FormKey).ToHashSet();
 
-            var healthMagicEffects = MagicEffects(state).Item2;
+            var healthMagicEffects = magicEffects.Item2;
 
             var carryWeightSpells = new HashSet<(IFormLinkGetter<ISpellGetter>, int)>();
 
             state.PatchMod.Spells.Set(state.LoadOrder.PriorityOrder.Spell().WinningOverrides()
-                .Where(spell => spell.Effects.Any(e => carryWeightEffectFormKeys.Contains(e.BaseEffect.FormKey)))
+                .Where(spell => spell.Effects.Any(e => carryWeightEffects.Contains(e.BaseEffect)))
                 .Select(s => s.DeepCopy())
                 .Do(spell =>
                 {
-                    foreach (var carryWeightEffect in carryWeightEffectFormKeys)
+                    foreach (var carryWeightEffect in carryWeightEffects)
                     {
                         Console.WriteLine($"{carryWeightEffect}");
                         spell.Effects.Do(e =>
                         {
-                            if (e.BaseEffect.FormKey.Equals(carryWeightEffect))
+                            if (e.BaseEffect.Equals(carryWeightEffect))
                             {
                                 Console.WriteLine($"{spell.Name} Strenth: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplyer}");
                                 e.Data.Magnitude *= effectMultiplyer;
@@ -287,18 +289,20 @@ namespace SlotsSlotsSlots
         {
             var foundCarryWeight = new HashSet<IFormLinkGetter<IMagicEffectGetter>>();
             var foundHealth = new HashSet<IFormLinkGetter<IMagicEffectGetter>>();
-            state.LoadOrder.PriorityOrder.MagicEffect().WinningOverrides()
-                .Do(e =>
+            foreach (var e in state.LoadOrder.PriorityOrder.MagicEffect().WinningOverrides())
+            {
+                if (e.Archetype.ActorValue.Equals(ActorValue.CarryWeight))
                 {
-                    if (e.Archetype.ActorValue.Equals(ActorValue.CarryWeight))
-                    {
-                        foundCarryWeight.Add(e.AsLink());
-                    }
-                    if (e.Archetype.ActorValue.Equals(ActorValue.Health))
-                    {
-                        foundHealth.Add(e.AsLink());
-                    }
-                });
+                    foundCarryWeight.Add(e.AsLink());
+                }
+                if (e.Archetype.ActorValue.Equals(ActorValue.Health)
+                    && !e.Flags.HasFlag(MagicEffect.Flag.Hostile)
+                    && e.Flags.HasFlag(MagicEffect.Flag.Recover)
+                    && !e.Description.String.IsNullOrWhitespace())
+                {
+                    foundHealth.Add(e.AsLink());
+                }
+            }
             return (foundCarryWeight, foundHealth);
         }
     }
