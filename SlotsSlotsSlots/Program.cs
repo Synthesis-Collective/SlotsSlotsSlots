@@ -56,7 +56,7 @@ namespace SlotsSlotsSlots
                 {
                     if (carryWeightEffects.Contains(e.BaseEffect))
                     {
-                        Console.WriteLine($"{spell.Name} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplyer}");
+                        Console.WriteLine($"{spell.EditorID} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplyer}");
                         e.Data.Magnitude *= effectMultiplyer;
                         carryWeightSpells.Add((spell.AsLink(), (int)e.Data.Magnitude));
                         deepCopySpell.Description += $"\n This alters your inventory space by {e.Data.Magnitude} Slots.";
@@ -82,7 +82,7 @@ namespace SlotsSlotsSlots
                             {
                                 if (perk.Effects.Any(e => e.ContainedFormLinks.Any(a => a.FormKey.Equals(carryWeightSpell.Item1.FormKey))))
                                 {
-                                    Console.WriteLine($"Patched {perk.Name} Description.");
+                                    Console.WriteLine($"Patched {perk.EditorID} Description.");
                                     if (perk.Effects.Count > 1)
                                     {
                                         deepcopyPerk.Description += $"\n This results a Slots change by {carryWeightSpell.Item2}.";
@@ -126,7 +126,7 @@ namespace SlotsSlotsSlots
                     {
                         if (carryWeightEffect.Equals(e.BaseEffect))
                         {
-                            Console.WriteLine($"{i.Name} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplyer}");
+                            Console.WriteLine($"{i.EditorID} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplyer}");
                             e.Data.Magnitude *= effectMultiplyer;
                         }
                     }
@@ -141,7 +141,7 @@ namespace SlotsSlotsSlots
                             if (healthMagicEffect.Equals(e.BaseEffect) && (i.HasKeyword(Skyrim.Keyword.VendorItemFood) || i.HasKeyword(Skyrim.Keyword.VendorItemFoodRaw)))
                             {
                                 deepCopyI.Remove(healthMagicEffect.FormKey);
-                                Console.WriteLine($"{i.Name} removed Health Effect.");
+                                Console.WriteLine($"{i.EditorID} removed Health Effect.");
                             }
                             if (healthMagicEffect.Equals(e.BaseEffect)
                             &&
@@ -151,7 +151,7 @@ namespace SlotsSlotsSlots
                             || i.EditorID.Equals("dunSleepingTreeCampSap")))
                             {
                                 e.Data.Magnitude = 0;
-                                Console.WriteLine($"{i.Name} set Health Effect {healthMagicEffect.FormKey} to 0.");
+                                Console.WriteLine($"{i.EditorID} set Health Effect {healthMagicEffect.FormKey} to 0.");
                             }
                         }
                     }
@@ -174,7 +174,7 @@ namespace SlotsSlotsSlots
                     {
                         if (carryWeightEffect.Equals(e.BaseEffect))
                         {
-                            Console.WriteLine($"{i.Name} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplyer}");
+                            Console.WriteLine($"{i.EditorID} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplyer}");
                             e.Data.Magnitude *= effectMultiplyer;
                         }
                     }
@@ -189,7 +189,7 @@ namespace SlotsSlotsSlots
                             if (healthMagicEffect.Equals(e.BaseEffect))
                             {
                                 e.Data.Magnitude = 0;
-                                Console.WriteLine($"{i.Name} set Health Effect {healthMagicEffect.FormKey} to 0.");
+                                Console.WriteLine($"{i.EditorID} set Health Effect {healthMagicEffect.FormKey} to 0.");
                             }
                         }
                     }
@@ -206,30 +206,15 @@ namespace SlotsSlotsSlots
                     var deepCopyI = i.DeepCopy();
                     foreach (var e in deepCopyI.Effects)
                     {
-                        if (carryWeightEffects.Contains(e.BaseEffect))
+                        if (carryWeightEffect.Equals(e.BaseEffect))
                         {
-                            Console.WriteLine($"{i.Name} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplyer}");
+                            Console.WriteLine($"{i.EditorID} {e.BaseEffect} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplyer}");
                             e.Data.Magnitude *= effectMultiplyer;
                             state.PatchMod.ObjectEffects.Set(deepCopyI);
                         }
                     }
                 }
             }
-            state.PatchMod.ObjectEffects.Set(
-                state.LoadOrder.PriorityOrder.ObjectEffect().WinningOverrides()
-                    .Where(i => i.Effects.Any(e => carryWeightEffects.Contains(e.BaseEffect)))
-                    .Select(m => m.DeepCopy())
-                    .Do(i =>
-                    {
-                        i.Effects.Do(e =>
-                        {
-                            if (carryWeightEffects.Contains(e.BaseEffect))
-                            {
-                                Console.WriteLine($"{i.Name} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplyer}");
-                                e.Data.Magnitude *= effectMultiplyer;
-                            }
-                        });
-                    }));
             Console.WriteLine("Patching Object Effects done.");
 
             Console.WriteLine("Patching Books.");
