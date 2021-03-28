@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Noggog;
 using Mutagen.Bethesda;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Synthesis;
@@ -293,7 +294,10 @@ namespace SlotsSlotsSlots
                 {
                     foundCarryWeight.Add(e.AsLink());
                 }
-                if (e.Archetype.ActorValue.Equals(ActorValue.Health))
+                if (e.Archetype.ActorValue.Equals(ActorValue.Health)
+                    && !e.Flags.HasFlag(MagicEffect.Flag.Hostile)
+                    && e.Flags.HasFlag(MagicEffect.Flag.Recover)
+                    && !e.Description.String.IsNullOrWhitespace())
                 {
                     foundHealth.Add(e.AsLink());
                 }
