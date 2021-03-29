@@ -59,7 +59,7 @@ namespace SlotsSlotsSlots
                         Console.WriteLine($"{spell.EditorID} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplyer}");
                         e.Data.Magnitude *= effectMultiplyer;
                         carryWeightSpells.Add((spell.AsLink(), (int)e.Data.Magnitude));
-                        deepCopySpell.Description += $"\n This alters your inventory space by {e.Data.Magnitude} Slots.";
+                        if (!(spell.Description.ToString().IsNullOrWhitespace())) deepCopySpell.Description += $"\n This alters your inventory space by {e.Data.Magnitude} Slots.";
                         state.PatchMod.Spells.Set(deepCopySpell);
                     }
                 }
@@ -82,14 +82,16 @@ namespace SlotsSlotsSlots
                             {
                                 if (perk.Effects.Any(e => e.ContainedFormLinks.Any(a => a.FormKey.Equals(carryWeightSpell.Item1.FormKey))))
                                 {
-                                    Console.WriteLine($"Patched {perk.EditorID} Description.");
-                                    if (perk.Effects.Count > 1)
+                                    
+                                    if (perk.Effects.Count > 1 && !perk.Description.ToString().IsNullOrWhitespace())
                                     {
                                         deepcopyPerk.Description += $"\n This results a Slots change by {carryWeightSpell.Item2}.";
+                                        Console.WriteLine($"Patched {perk.EditorID} Description.");
                                     }
-                                    else
+                                    else if (!perk.Description.ToString().IsNullOrWhitespace())
                                     {
                                         deepcopyPerk.Description += $"\n This equals {carryWeightSpell.Item2} Slots.";
+                                        Console.WriteLine($"Patched {perk.EditorID} Description.");
                                     }
                                 }
                             }
