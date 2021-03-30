@@ -29,10 +29,15 @@ namespace SlotsSlotsSlots
 
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            float baseCarryWeight = Settings.BaseCarryWeight;
-            float effectMultiplyer = Settings.EffectMultiplyer;
-            float potionWeights = Settings.PotionWeights;
-            bool noHealFromWeightless = Settings.NoHealFromWeightless;
+            float baseCarryWeight = Settings.BaseNumberOfSlots;
+            float effectMultiplier = Settings.CarryweightEffectMultiplier;
+            float potionWeights = Settings.PotionSlotUse;
+            bool noHealFromWeightless = Settings.WeightlessItemsOfferNoHealing;
+            int minWeaponslots = Settings.MinimumUsedWeaponSlots;
+            int maxWeaponslots = Settings.MaximumUsedWeaponSlots;
+            int minArmorslots = Settings.MinimumUsedArmorSlots;
+            int maxArmorslots = Settings.MaximumUsedArmorSlots;
+
             Console.WriteLine("Settings Loaded.");
             Console.WriteLine("Patching Races.");
             state.PatchMod.Races.Set(
@@ -64,8 +69,8 @@ namespace SlotsSlotsSlots
                 {
                     if (carryWeightEffects.Contains(e.BaseEffect))
                     {
-                        Console.WriteLine($"{spell.EditorID} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplyer}");
-                        e.Data.Magnitude *= effectMultiplyer;
+                        Console.WriteLine($"{spell.EditorID} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplier}");
+                        e.Data.Magnitude *= effectMultiplier;
                         carryWeightSpells.Add((spell.AsLink(), (int)e.Data.Magnitude));
                         if (!(spell.Description.ToString().IsNullOrWhitespace())) deepCopySpell.Description += $"\n This alters your inventory space by {e.Data.Magnitude} Slots.";
                         state.PatchMod.Spells.Set(deepCopySpell);
@@ -136,8 +141,8 @@ namespace SlotsSlotsSlots
                     {
                         if (carryWeightEffect.Equals(e.BaseEffect))
                         {
-                            Console.WriteLine($"{i.EditorID} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplyer}");
-                            e.Data.Magnitude *= effectMultiplyer;
+                            Console.WriteLine($"{i.EditorID} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplier}");
+                            e.Data.Magnitude *= effectMultiplier;
                         }
                     }
 
@@ -184,8 +189,8 @@ namespace SlotsSlotsSlots
                     {
                         if (carryWeightEffect.Equals(e.BaseEffect))
                         {
-                            Console.WriteLine($"{i.EditorID} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplyer}");
-                            e.Data.Magnitude *= effectMultiplyer;
+                            Console.WriteLine($"{i.EditorID} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplier}");
+                            e.Data.Magnitude *= effectMultiplier;
                         }
                     }
                 
@@ -218,8 +223,8 @@ namespace SlotsSlotsSlots
                     {
                         if (carryWeightEffect.Equals(e.BaseEffect))
                         {
-                            Console.WriteLine($"{i.EditorID} {e.BaseEffect} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplyer}");
-                            e.Data.Magnitude *= effectMultiplyer;
+                            Console.WriteLine($"{i.EditorID} {e.BaseEffect} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplier}");
+                            e.Data.Magnitude *= effectMultiplier;
                             state.PatchMod.ObjectEffects.Set(deepCopyI);
                         }
                     }
@@ -255,7 +260,7 @@ namespace SlotsSlotsSlots
                 .Where(w => w.BasicStats?.Weight != 0)
                 .Select(w => w.BasicStats?.Weight ?? 0.0f);
             Console.WriteLine("Making Weapon Distributions: ");
-            var weaponDistributions = MakeDistributions(weaponWeights);
+            var weaponDistributions = MakeDistributions(weaponWeights, minWeaponslots, maxWeaponslots);
             state.PatchMod.Weapons.Set(
                 state.LoadOrder.PriorityOrder.Weapon().WinningOverrides()
                     .Where(w => w.BasicStats?.Weight != 0 && w.BasicStats?.Weight != FindWeight(weaponDistributions, w.BasicStats!.Weight))
@@ -273,7 +278,7 @@ namespace SlotsSlotsSlots
                 .Where(w => w.Weight != 0)
                 .Select(w => w.Weight);
             Console.WriteLine("Making Armor Distributions: ");
-            var armorDistributions = MakeDistributions(armorWeights);
+            var armorDistributions = MakeDistributions(armorWeights, minArmorslots, maxArmorslots);
             state.PatchMod.Armors.Set(
                 state.LoadOrder.PriorityOrder.Armor().WinningOverrides()
                     .Where(w => w.Weight != 0 && w.Weight != FindWeight(weaponDistributions, w.Weight))
