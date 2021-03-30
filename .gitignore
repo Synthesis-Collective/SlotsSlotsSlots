@@ -2,6 +2,10 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
+/SlotsSlotsSlots/bin
+/SlotsSlotsSlots/obj
+/SlotsSlotsSlots/bin/*
+/SlotsSlotsSlots/obj/*
 /SlotsSlotsSlots/obj/SlotsSlotsSlots.csproj.nuget.g.targets
 /SlotsSlotsSlots/obj/SlotsSlotsSlots.csproj.nuget.g.props
 /SlotsSlotsSlots/obj/SlotsSlotsSlots.csproj.nuget.dgspec.json
