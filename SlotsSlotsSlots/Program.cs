@@ -7,6 +7,7 @@ using Mutagen.Bethesda;
 using Mutagen.Bethesda.Skyrim;
 using Mutagen.Bethesda.Synthesis;
 using Mutagen.Bethesda.FormKeys.SkyrimSE;
+using System.Diagnostics;
 
 namespace SlotsSlotsSlots
 {
@@ -33,13 +34,11 @@ namespace SlotsSlotsSlots
             float effectMultiplier = Settings.CarryweightEffectMultiplier;
             float potionWeights = Settings.PotionSlotUse;
             bool noHealFromWeightless = Settings.WeightlessItemsOfferNoHealing;
-            int minWeaponslots = Settings.MinimumUsedWeaponSlots;
-            int maxWeaponslots = Settings.MaximumUsedWeaponSlots;
+            int minWeaponSlots = Settings.MinimumUsedWeaponSlots;
+            int maxWeaponSlots = Settings.MaximumUsedWeaponSlots;
             int minArmorslots = Settings.MinimumUsedArmorSlots;
             int maxArmorslots = Settings.MaximumUsedArmorSlots;
 
-            Console.WriteLine("Settings Loaded.");
-            Console.WriteLine("Patching Races.");
             state.PatchMod.Races.Set(
                 state.LoadOrder.PriorityOrder.Race().WinningOverrides()
                     .Where(r => r.HasKeyword(Skyrim.Keyword.ActorTypeNPC)
@@ -47,64 +46,52 @@ namespace SlotsSlotsSlots
                     .Select(r => r.DeepCopy())
                     .Do(r =>
                     {
-                        Console.WriteLine($"{r.EditorID} BaseCarryWeight : {r.BaseCarryWeight} -> {baseCarryWeight}");
                         r.BaseCarryWeight = baseCarryWeight;
                     })
             );
-            Console.WriteLine("Paching Races Done.");
 
-            Console.WriteLine("Patching Spells.");
-            var magicEffects = MagicEffects(state);
-            var carryWeightEffects = magicEffects.Item1;
+            (HashSet<IFormLinkGetter<IMagicEffectGetter>> carryWeight, HashSet<IFormLinkGetter<IMagicEffectGetter>> health) magicEffects = MagicEffects(state);
 
-
-            var healthMagicEffects = magicEffects.Item2;
-
-            var carryWeightSpells = new HashSet<(IFormLinkGetter<ISpellGetter>, int)>();
+            var carryWeightSpells = new HashSet<(IFormLinkGetter<ISpellGetter> Spell, int SlotAmount)>();
 
             foreach (var spell in state.LoadOrder.PriorityOrder.Spell().WinningOverrides())
             {
                 var deepCopySpell = spell.DeepCopy();
                 foreach (var e in deepCopySpell.Effects)
                 {
-                    if (carryWeightEffects.Contains(e.BaseEffect))
+                    if (magicEffects.carryWeight.Contains(e.BaseEffect))
                     {
-                        Console.WriteLine($"{spell.EditorID} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplier}");
                         e.Data.Magnitude *= effectMultiplier;
                         carryWeightSpells.Add((spell.AsLink(), (int)e.Data.Magnitude));
-                        if (!(spell.Description.ToString().IsNullOrWhitespace())) deepCopySpell.Description += $"\n This alters your inventory space by {e.Data.Magnitude} Slots.";
+                        if (!(spell.Description.ToString().IsNullOrWhitespace())) deepCopySpell.Description += $"\n Alters your inventory space by {e.Data.Magnitude} Slots.";
                         state.PatchMod.Spells.Set(deepCopySpell);
                     }
                 }
             }; 
-            Console.WriteLine("Patching Spells Done.");
 
-            var carryWeightSpellsItem1FormKeys = carryWeightSpells.Select(x => x.Item1.FormKey).ToHashSet();
+            var carryWeightSpellFormKeys = carryWeightSpells.Select(x => x.Spell.FormKey).ToHashSet();
 
-            Console.WriteLine("Patching Perk Descriptions.");
             foreach (var perk in state.LoadOrder.PriorityOrder.Perk().WinningOverrides())
             {
                 foreach (var effect in perk.ContainedFormLinks)
                 {
-                    if (carryWeightSpellsItem1FormKeys.Contains(effect.FormKey))
+                    if (carryWeightSpellFormKeys.Contains(effect.FormKey))
                     {
                         var deepcopyPerk = perk.DeepCopy();
                         foreach (var carryWeightSpell in carryWeightSpells)
                         {
                             foreach (var e in perk.Effects)
                             {
-                                if (perk.Effects.Any(e => e.ContainedFormLinks.Any(a => a.FormKey.Equals(carryWeightSpell.Item1.FormKey))))
+                                if (perk.Effects.Any(e => e.ContainedFormLinks.Any(a => a.FormKey.Equals(carryWeightSpell.Spell.FormKey))))
                                 {
                                     
                                     if (perk.Effects.Count > 1 && !perk.Description.ToString().IsNullOrWhitespace())
                                     {
-                                        deepcopyPerk.Description += $"\n This results a Slots change by {carryWeightSpell.Item2}.";
-                                        Console.WriteLine($"Patched {perk.EditorID} Description.");
+                                        deepcopyPerk.Description += $"\n This will result in a Slots change by {carryWeightSpell.SlotAmount}.";
                                     }
                                     else if (!perk.Description.ToString().IsNullOrWhitespace())
                                     {
-                                        deepcopyPerk.Description += $"\n This equals {carryWeightSpell.Item2} Slots.";
-                                        Console.WriteLine($"Patched {perk.EditorID} Description.");
+                                        deepcopyPerk.Description += $"\n Takes up {carryWeightSpell.SlotAmount} Slots.";
                                     }
                                 }
                             }
@@ -113,188 +100,162 @@ namespace SlotsSlotsSlots
                     }
                 }
             };
-            Console.WriteLine("Patching Perk Descriptions done.");
 
-            Console.WriteLine("Patching Misc. Items.");
             state.PatchMod.MiscItems.Set(
                 state.LoadOrder.PriorityOrder.MiscItem().WinningOverrides()
                     .Where(m => m.Weight != 0.0f)
                     .Select(m => m.DeepCopy())
                     .Do(m => m.Weight = 0.0f));
-            Console.WriteLine("Patching Misc. Items done.");
 
-            Console.WriteLine("Patching Ingestibles.");
-            foreach (var i in state.LoadOrder.PriorityOrder.Ingestible().WinningOverrides())
+            foreach (var ingestible in state.LoadOrder.PriorityOrder.Ingestible().WinningOverrides())
             {
-                var deepCopyI = i.DeepCopy();
-                if (i.HasKeyword(Skyrim.Keyword.VendorItemPotion))
+                var ingestibleCopy = ingestible.DeepCopy();
+                if (ingestible.HasKeyword(Skyrim.Keyword.VendorItemPotion))
                 {
-                    deepCopyI.Weight = potionWeights;
+                    ingestibleCopy.Weight = potionWeights;
                 }
-                else if (!i.EditorID.Equals("dunSleepingTreeCampSap"))
+                else if (!ingestible.EditorID.Equals("dunSleepingTreeCampSap"))
                 {
-                    deepCopyI.Weight = 0.0f;
+                    ingestibleCopy.Weight = 0.0f;
                 }
-                foreach (var carryWeightEffect in carryWeightEffects)
+                foreach (var carryWeightEffect in magicEffects.carryWeight)
                 {
-                    foreach (var e in deepCopyI.Effects)
+                    foreach (var effect in ingestibleCopy.Effects)
                     {
-                        if (carryWeightEffect.Equals(e.BaseEffect))
+                        if (carryWeightEffect.Equals(effect.BaseEffect))
                         {
-                            Console.WriteLine($"{i.EditorID} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplier}");
-                            e.Data.Magnitude *= effectMultiplier;
+                            effect.Data.Magnitude *= effectMultiplier;
                         }
                     }
 
                 }
                 if (noHealFromWeightless)
                 {
-                    foreach (var healthMagicEffect in healthMagicEffects)
+                    foreach (var healthEffect in magicEffects.health)
                     {
-                        foreach (var e in deepCopyI.Effects)
+                        foreach (var e in ingestibleCopy.Effects)
                         {
-                            if (healthMagicEffect.Equals(e.BaseEffect) && (i.HasKeyword(Skyrim.Keyword.VendorItemFood) || i.HasKeyword(Skyrim.Keyword.VendorItemFoodRaw)))
+                            if (healthEffect.Equals(e.BaseEffect) && (ingestible.HasKeyword(Skyrim.Keyword.VendorItemFood) || ingestible.HasKeyword(Skyrim.Keyword.VendorItemFoodRaw)))
                             {
-                                deepCopyI.Remove(healthMagicEffect.FormKey);
-                                Console.WriteLine($"{i.EditorID} removed Health Effect.");
+                                ingestibleCopy.Remove(healthEffect.FormKey);
                             }
-                            if (healthMagicEffect.Equals(e.BaseEffect)
+                            if (healthEffect.Equals(e.BaseEffect)
                             &&
-                            !(i.HasKeyword(Skyrim.Keyword.VendorItemFood)
-                            || i.HasKeyword(Skyrim.Keyword.VendorItemFoodRaw)
-                            || i.HasKeyword(Skyrim.Keyword.VendorItemPotion)
-                            || i.EditorID.Equals("dunSleepingTreeCampSap")))
+                            !(ingestible.HasKeyword(Skyrim.Keyword.VendorItemFood)
+                            || ingestible.HasKeyword(Skyrim.Keyword.VendorItemFoodRaw)
+                            || ingestible.HasKeyword(Skyrim.Keyword.VendorItemPotion)
+                            || ingestible.EditorID.Equals("dunSleepingTreeCampSap")))
                             {
                                 e.Data.Magnitude = 0;
-                                Console.WriteLine($"{i.EditorID} set Health Effect {healthMagicEffect.FormKey} to 0.");
                             }
                         }
                     }
                 }
 
-                state.PatchMod.Ingestibles.Set(deepCopyI);            
+                state.PatchMod.Ingestibles.Set(ingestibleCopy);            
             }
 
-            Console.WriteLine("Patching Ingestibles done.");
 
 
-            Console.WriteLine("Patching Ingredients.");
-            foreach (var i in state.LoadOrder.PriorityOrder.Ingredient().WinningOverrides())
+            foreach (var ingredient in state.LoadOrder.PriorityOrder.Ingredient().WinningOverrides())
             {           
-                var deepCopyI = i.DeepCopy();
-                deepCopyI.Weight = 0.0f;
-                foreach (var carryWeightEffect in carryWeightEffects)
+                var ingredientCopy = ingredient.DeepCopy();
+                ingredientCopy.Weight = 0.0f;
+                foreach (var carryWeightEffect in magicEffects.carryWeight)
                 {
-                    foreach (var e in deepCopyI.Effects)
+                    foreach (var effect in ingredientCopy.Effects)
                     {
-                        if (carryWeightEffect.Equals(e.BaseEffect))
+                        if (carryWeightEffect.Equals(effect.BaseEffect))
                         {
-                            Console.WriteLine($"{i.EditorID} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplier}");
-                            e.Data.Magnitude *= effectMultiplier;
+                            effect.Data.Magnitude *= effectMultiplier;
                         }
                     }
                 
                 }
                 if (noHealFromWeightless)
                 {
-                    foreach (var healthMagicEffect in healthMagicEffects)
+                    foreach (var healthMagicEffect in magicEffects.health)
                     {
-                        foreach (var e in deepCopyI.Effects)
+                        foreach (var e in ingredientCopy.Effects)
                         {
                             if (healthMagicEffect.Equals(e.BaseEffect))
                             {
                                 e.Data.Magnitude = 0;
-                                Console.WriteLine($"{i.EditorID} set Health Effect {healthMagicEffect.FormKey} to 0.");
                             }
                         }
                     }
                 }
-                state.PatchMod.Ingredients.Set(deepCopyI);            
+                state.PatchMod.Ingredients.Set(ingredientCopy);            
             }
-            Console.WriteLine("Patching Ingredients done.");
 
-            Console.WriteLine("Patching Object Effects.");
-            foreach (var i in state.LoadOrder.PriorityOrder.ObjectEffect().WinningOverrides()) 
+            foreach (var objectEffect in state.LoadOrder.PriorityOrder.ObjectEffect().WinningOverrides()) 
             {
-                foreach (var carryWeightEffect in carryWeightEffects)
+                foreach (var carryWeightEffect in magicEffects.carryWeight)
                 {
-                    var deepCopyI = i.DeepCopy();
-                    foreach (var e in deepCopyI.Effects)
+                    var objectEffectCopy = objectEffect.DeepCopy();
+                    foreach (var e in objectEffectCopy.Effects)
                     {
                         if (carryWeightEffect.Equals(e.BaseEffect))
                         {
-                            Console.WriteLine($"{i.EditorID} {e.BaseEffect} Magnitude: {e.Data.Magnitude} -> {e.Data.Magnitude * effectMultiplier}");
                             e.Data.Magnitude *= effectMultiplier;
-                            state.PatchMod.ObjectEffects.Set(deepCopyI);
+                            state.PatchMod.ObjectEffects.Set(objectEffectCopy);
                         }
                     }
                 }
             }
-            Console.WriteLine("Patching Object Effects done.");
 
-            Console.WriteLine("Patching Books.");
             state.PatchMod.Books.Set(
                 state.LoadOrder.PriorityOrder.Book().WinningOverrides()
                     .Where(m => m.Weight != 0.0f)
                     .Select(m => m.DeepCopy())
                     .Do(m => m.Weight = 0.0f));
-            Console.WriteLine("Patching Books done.");
 
-            Console.WriteLine("Patching Ammunitions.");
             state.PatchMod.Ammunitions.Set(
                 state.LoadOrder.PriorityOrder.Ammunition().WinningOverrides()
                     .Where(m => m.Weight != 0.0f)
                     .Select(m => m.DeepCopy())
                     .Do(m => m.Weight = 0.0f));
-            Console.WriteLine("Patching Ammunitions done.");
 
-            Console.WriteLine("Patching Soul Gems.");
             state.PatchMod.SoulGems.Set(
                 state.LoadOrder.PriorityOrder.SoulGem().WinningOverrides()
                     .Where(m => m.Weight != 0.0f)
                     .Select(m => m.DeepCopy())
                     .Do(m => m.Weight = 0.0f));
-            Console.WriteLine("Patching Soul Gems done.");
 
-            var weaponWeights = state.LoadOrder.PriorityOrder.Weapon().WinningOverrides()
-                .Where(w => w.BasicStats?.Weight != 0)
-                .Select(w => w.BasicStats?.Weight ?? 0.0f);
-            Console.WriteLine("Making Weapon Distributions: ");
-            var weaponDistributions = MakeDistributions(weaponWeights, minWeaponslots, maxWeaponslots);
-            state.PatchMod.Weapons.Set(
-                state.LoadOrder.PriorityOrder.Weapon().WinningOverrides()
-                    .Where(w => w.BasicStats?.Weight != 0 && w.BasicStats?.Weight != FindWeight(weaponDistributions, w.BasicStats!.Weight))
-                    .Select(m => m.DeepCopy())
-                    .Do(w =>
-                    {
-                        var weight = FindWeight(weaponDistributions, w.BasicStats!.Weight);
-                        Console.WriteLine($"{w.Name} : {w.BasicStats!.Weight} -> {weight}");
-                        w.BasicStats!.Weight = weight;
-                    })
-                
-            );
-            
-            var armorWeights = state.LoadOrder.PriorityOrder.Armor().WinningOverrides()
-                .Where(w => w.Weight != 0)
-                .Select(w => w.Weight);
-            Console.WriteLine("Making Armor Distributions: ");
-            var armorDistributions = MakeDistributions(armorWeights, minArmorslots, maxArmorslots);
+            var weapons = state.LoadOrder.PriorityOrder.Weapon().WinningOverrides();
+            var weaponWeights = weapons
+                                .Where(w => w.BasicStats?.Weight != 0)
+                                .Select(w => w.BasicStats?.Weight ?? 0.0f);
+            var weaponDistributions = MakeDistributions(weaponWeights, minWeaponSlots, maxWeaponSlots);
+
+            foreach (var weapon in weapons)
+            {
+                var calculatedWeight = FindWeight(weaponDistributions, weapon.BasicStats.Weight);
+                if (weapon.BasicStats.Weight == 0 || weapon.BasicStats.Weight == calculatedWeight) continue;
+
+                var weaponCopy = weapon.DeepCopy();
+                weaponCopy.BasicStats.Weight = calculatedWeight;
+                state.PatchMod.Weapons.Set(weaponCopy);
+            }
+
+            var armorWithWeights = state.LoadOrder.PriorityOrder.Armor()
+                                                                .WinningOverrides()
+                                                                .Where(w => w.Weight != 0 && w.Weight != FindWeight(weaponDistributions, w.Weight));
+
+            var armorDistributions = MakeDistributions(armorWithWeights.Select(w => w.Weight), minArmorslots, maxArmorslots);
             state.PatchMod.Armors.Set(
-                state.LoadOrder.PriorityOrder.Armor().WinningOverrides()
-                    .Where(w => w.Weight != 0 && w.Weight != FindWeight(weaponDistributions, w.Weight))
+                    armorWithWeights
                     .Select(m => m.DeepCopy())
                     .Do(w =>
                     {
                         var weight = FindWeight(weaponDistributions, w.Weight);
-                        Console.WriteLine($"{w.Name} : {w.Weight} -> {weight}");
                         w.Weight = weight;
                     })
                 
             );
-            
         }
 
-        private static float FindWeight(List<(float MaxWeight, int Slots)> distributions, float weight)
+        private static float FindWeight(IEnumerable<(float MaxWeight, int Slots)> distributions, float weight)
         {
             var found = distributions.FirstOrDefault(d => d.MaxWeight >= weight);
             if (found == default) 
@@ -302,7 +263,7 @@ namespace SlotsSlotsSlots
             return found.Slots;
         }
 
-        private static List<(float MaxWeight, int Slots)> MakeDistributions(IEnumerable<float> weights, int minSlots = 1, int maxSlots = 5)
+        private static HashSet<(float MaxWeight, int Slots)> MakeDistributions(IEnumerable<float> weights, int minSlots = 1, int maxSlots = 5)
         {
             var warr = weights.ToArray();
             var deltaSlots = maxSlots - minSlots;
@@ -311,11 +272,10 @@ namespace SlotsSlotsSlots
             var deltaWeight = maxWeight - minWeight;
             var sectionSize = deltaWeight / (deltaSlots + 1);
 
-            var output = new List<(float MaxWeight, int Slots)>();
+            var output = new HashSet<(float MaxWeight, int Slots)>();
             var weight = minWeight + sectionSize;
             for (var slots = minSlots; slots <= maxSlots; slots += 1)
             {
-                Console.WriteLine($" - {weight} -> {slots}");
                 output.Add((weight, slots));
                 weight += sectionSize;
             }
