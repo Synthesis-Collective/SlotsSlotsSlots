@@ -247,7 +247,7 @@ namespace SlotsSlotsSlots
                     .Select(m => m.DeepCopy())
                     .Do(w =>
                     {
-                        var weight = FindWeight(weaponDistributions, w.Weight);
+                        var weight = FindWeight(armorDistributions, w.Weight);
                         w.Weight = weight;
                     })
                 
