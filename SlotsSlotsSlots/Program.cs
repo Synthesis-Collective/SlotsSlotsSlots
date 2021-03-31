@@ -134,15 +134,9 @@ namespace SlotsSlotsSlots
                     {
                         foreach (var e in ingestibleCopy.Effects)
                         {
-                            if (healthEffect.Equals(e.BaseEffect) && (ingestible.HasKeyword(Skyrim.Keyword.VendorItemFood) || ingestible.HasKeyword(Skyrim.Keyword.VendorItemFoodRaw)))
-                            {
-                                ingestibleCopy.Remove(healthEffect.FormKey);
-                            }
                             if (healthEffect.Equals(e.BaseEffect)
                             &&
-                            !(ingestible.HasKeyword(Skyrim.Keyword.VendorItemFood)
-                            || ingestible.HasKeyword(Skyrim.Keyword.VendorItemFoodRaw)
-                            || ingestible.HasKeyword(Skyrim.Keyword.VendorItemPotion)
+                            !(ingestible.HasKeyword(Skyrim.Keyword.VendorItemPotion)
                             || ingestible.EditorID.Equals("dunSleepingTreeCampSap")))
                             {
                                 e.Data.Magnitude = 0;
