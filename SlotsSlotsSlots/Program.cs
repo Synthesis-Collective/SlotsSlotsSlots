@@ -29,7 +29,7 @@ namespace SlotsSlotsSlots
 
         public static void RunPatch(IPatcherState<ISkyrimMod, ISkyrimModGetter> state)
         {
-            float baseCarryWeight = Settings.BaseNumberOfSlots;
+            float baseCarryWeightMult = Settings.BaseMultiplier;
             float effectMultiplier = Settings.CarryweightEffectMultiplier;
             float potionWeights = Settings.PotionSlotUse;
             bool noHealFromWeightless = Settings.WeightlessItemsOfferNoHealing;
@@ -45,7 +45,7 @@ namespace SlotsSlotsSlots
                     .Select(r => r.DeepCopy())
                     .Do(r =>
                     {
-                        r.BaseCarryWeight = baseCarryWeight;
+                        r.BaseCarryWeight *= baseCarryWeightMult;
                     })
             );
 
