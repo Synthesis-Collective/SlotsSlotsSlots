@@ -64,7 +64,7 @@ namespace SlotsSlotsSlots
                         e.Data.Magnitude *= effectMultiplier;
                         carryWeightSpells.Add((spell.AsLink(), (int)e.Data.Magnitude));
                         if (!(spell.Description.ToString().IsNullOrWhitespace())) deepCopySpell.Description += $"\n Alters your inventory space by {e.Data.Magnitude} Slots.";
-                        state.PatchMod.Spells.Set(deepCopySpell);
+                        state.PatchMod.Spells.Set(deepCopySpell);                       
                     }
                 }
             }; 
@@ -283,7 +283,8 @@ namespace SlotsSlotsSlots
             var foundHealth = new HashSet<IFormLinkGetter<IMagicEffectGetter>>();
             foreach (var e in state.LoadOrder.PriorityOrder.MagicEffect().WinningOverrides())
             {
-                if (e.Archetype.ActorValue.Equals(ActorValue.CarryWeight))
+                if (e.Archetype.ActorValue.Equals(ActorValue.CarryWeight)
+                    && e.TargetType != TargetType.Aimed)
                 {
                     foundCarryWeight.Add(e.AsLink());
                 }
