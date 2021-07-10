@@ -80,15 +80,24 @@ namespace SlotsSlotsSlots
                         var deepcopyPerk = perk.DeepCopy();
                         foreach (var carryWeightSpell in carryWeightSpells)
                         {
-                            foreach (var e in perk.Effects)
+                            if (!perk.Description.ToString().IsNullOrWhitespace())
                             {
-                                if (perk.Effects.Any(e => e.ContainedFormLinks.Any(a => a.FormKey.Equals(carryWeightSpell.Spell.FormKey))))
+                                int carryWeightSlotchange = 0;
+
+                                foreach (var e in perk.Effects)
                                 {
-                                    
-                                    if (perk.Effects.Count > 1 && !perk.Description.ToString().IsNullOrWhitespace())
+                                    foreach (var fl in e.ContainedFormLinks)
                                     {
-                                        deepcopyPerk.Description += $"\n This will result in a Inventory change of {carryWeightSpell.SlotAmount} Slots.";
+                                        if (fl.FormKey.Equals(carryWeightSpell.Spell.FormKey))
+                                        {
+                                            carryWeightSlotchange += carryWeightSpell.SlotAmount;
+                                        }
                                     }
+                                }
+
+                                if (!carryWeightSlotchange.Equals(0))
+                                {
+                                    deepcopyPerk.Description += $"\n This will result in a Inventory change of {carryWeightSlotchange} Slots.";
                                 }
                             }
                         }
@@ -280,8 +289,8 @@ namespace SlotsSlotsSlots
             foreach (var e in state.LoadOrder.PriorityOrder.MagicEffect().WinningOverrides())
             {
                 if (e.Archetype.ActorValue.Equals(ActorValue.CarryWeight)
-                    && e.TargetType != TargetType.Aimed
-                    && e.TargetType != TargetType.Touch)
+                    && !e.TargetType.Equals(TargetType.Aimed)
+                    && !e.TargetType.Equals(TargetType.Touch))
                 {
                     foundCarryWeight.Add(e.AsLink());
                 }
