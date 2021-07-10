@@ -64,7 +64,7 @@ namespace SlotsSlotsSlots
                         e.Data.Magnitude *= effectMultiplier;
                         carryWeightSpells.Add((spell.AsLink(), (int)e.Data.Magnitude));
                         if (!(spell.Description.ToString().IsNullOrWhitespace())) deepCopySpell.Description += $"\n Alters your inventory space by {e.Data.Magnitude} Slots.";
-                        state.PatchMod.Spells.Set(deepCopySpell);
+                        state.PatchMod.Spells.Set(deepCopySpell);                       
                     }
                 }
             }; 
@@ -87,11 +87,7 @@ namespace SlotsSlotsSlots
                                     
                                     if (perk.Effects.Count > 1 && !perk.Description.ToString().IsNullOrWhitespace())
                                     {
-                                        deepcopyPerk.Description += $"\n This will result in a Slots change by {carryWeightSpell.SlotAmount}.";
-                                    }
-                                    else if (!perk.Description.ToString().IsNullOrWhitespace())
-                                    {
-                                        deepcopyPerk.Description += $"\n Takes up {carryWeightSpell.SlotAmount} Slots.";
+                                        deepcopyPerk.Description += $"\n This will result in a Inventory change of {carryWeightSpell.SlotAmount} Slots.";
                                     }
                                 }
                             }
@@ -283,7 +279,9 @@ namespace SlotsSlotsSlots
             var foundHealth = new HashSet<IFormLinkGetter<IMagicEffectGetter>>();
             foreach (var e in state.LoadOrder.PriorityOrder.MagicEffect().WinningOverrides())
             {
-                if (e.Archetype.ActorValue.Equals(ActorValue.CarryWeight))
+                if (e.Archetype.ActorValue.Equals(ActorValue.CarryWeight)
+                    && e.TargetType != TargetType.Aimed
+                    && e.TargetType != TargetType.Touch)
                 {
                     foundCarryWeight.Add(e.AsLink());
                 }
