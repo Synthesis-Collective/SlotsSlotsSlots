@@ -87,11 +87,7 @@ namespace SlotsSlotsSlots
                                     
                                     if (perk.Effects.Count > 1 && !perk.Description.ToString().IsNullOrWhitespace())
                                     {
-                                        deepcopyPerk.Description += $"\n This will result in a Slots change by {carryWeightSpell.SlotAmount}.";
-                                    }
-                                    else if (!perk.Description.ToString().IsNullOrWhitespace())
-                                    {
-                                        deepcopyPerk.Description += $"\n Takes up {carryWeightSpell.SlotAmount} Slots.";
+                                        deepcopyPerk.Description += $"\n This will result in a Inventory change of {carryWeightSpell.SlotAmount} Slots.";
                                     }
                                 }
                             }
