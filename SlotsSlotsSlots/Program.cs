@@ -284,7 +284,8 @@ namespace SlotsSlotsSlots
             foreach (var e in state.LoadOrder.PriorityOrder.MagicEffect().WinningOverrides())
             {
                 if (e.Archetype.ActorValue.Equals(ActorValue.CarryWeight)
-                    && e.TargetType != TargetType.Aimed)
+                    && e.TargetType != TargetType.Aimed
+                    && e.TargetType != TargetType.Touch)
                 {
                     foundCarryWeight.Add(e.AsLink());
                 }
