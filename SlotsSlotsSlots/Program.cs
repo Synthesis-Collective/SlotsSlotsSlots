@@ -82,27 +82,19 @@ namespace SlotsSlotsSlots
                         {
                             if (!perk.Description.ToString().IsNullOrWhitespace())
                             {
-                                int carryWeightSlotchange = 0;
-
                                 foreach (var e in perk.Effects)
                                 {
-                                    bool effectFound = false;
                                     foreach (var fl in e.ContainedFormLinks)
                                     {
                                         if (fl.FormKey.Equals(carryWeightSpell.Spell.FormKey))
                                         {
-                                            carryWeightSlotchange += carryWeightSpell.SlotAmount;
-                                            effectFound = true;
-                                            break;
+                                            if (!deepcopyPerk.Description.ToString().EndsWith($"\n Any Carry Weight changes of this Perk are to be seen divided by factor of {1 / effectMultiplier} in gameplay due to the Slots System."))
+                                            {
+                                                deepcopyPerk.Description += $"\n Any Carry Weight changes of this Perk are to be seen divided by factor of {1 / effectMultiplier} in gameplay due to the Slots System.";
+                                            }
                                         }
                                     }
-                                    if (effectFound) break;
                                 }
-                                if (!carryWeightSlotchange.Equals(0))
-                                {
-                                    deepcopyPerk.Description += $"\n Any Carry Weight changes are to bee seen a factor of {effectMultiplier} in gameplay due to the Slots System.";
-                                }
-
                             }
                         }
                         state.PatchMod.Perks.Set(deepcopyPerk);
