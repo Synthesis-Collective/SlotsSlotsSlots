@@ -86,19 +86,23 @@ namespace SlotsSlotsSlots
 
                                 foreach (var e in perk.Effects)
                                 {
+                                    bool effectFound = false;
                                     foreach (var fl in e.ContainedFormLinks)
                                     {
                                         if (fl.FormKey.Equals(carryWeightSpell.Spell.FormKey))
                                         {
                                             carryWeightSlotchange += carryWeightSpell.SlotAmount;
+                                            effectFound = true;
+                                            break;
                                         }
                                     }
+                                    if (effectFound) break;
                                 }
-
                                 if (!carryWeightSlotchange.Equals(0))
                                 {
-                                    deepcopyPerk.Description += $"\n This will result in a Inventory change of {carryWeightSlotchange} Slots.";
+                                    deepcopyPerk.Description += $"\n Any Carry Weight changes are to bee seen a factor of {effectMultiplier} in gameplay due to the Slots System.";
                                 }
+
                             }
                         }
                         state.PatchMod.Perks.Set(deepcopyPerk);
