@@ -88,9 +88,9 @@ namespace SlotsSlotsSlots
                                     {
                                         if (fl.FormKey.Equals(carryWeightSpell.Spell.FormKey))
                                         {
-                                            if (!deepcopyPerk.Description.ToString().EndsWith($"\n Any Carry Weight changes of this Perk are to be seen divided by factor of {1 / effectMultiplier} in gameplay due to the Slots System."))
+                                            if (!deepcopyPerk.Description.ToString().EndsWith($"\nIf this perk lists Carry Weigth devide it by {1 / effectMultiplier}."))
                                             {
-                                                deepcopyPerk.Description += $"\n Any Carry Weight changes of this Perk are to be seen divided by factor of {1 / effectMultiplier} in gameplay due to the Slots System.";
+                                                deepcopyPerk.Description += $"\nIf this perk lists Carry Weigth devide it by {1 / effectMultiplier}.";
                                             }
                                         }
                                     }
