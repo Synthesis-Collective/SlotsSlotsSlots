@@ -64,7 +64,7 @@ namespace SlotsSlotsSlots
                         float startingMagnitude = e.Data.Magnitude;
                         e.Data.Magnitude *= effectMultiplier;
                         carryWeightSpells.Add((spell.AsLink(),(int) startingMagnitude, (int)e.Data.Magnitude));
-                        if (!(spell.Description.ToString().IsNullOrWhitespace()))
+                        if (spell.Description.ToString().Contains($"{(int)startingMagnitude}"))
                         {
                             if ((int)e.Data.Magnitude != 1)
                             {
