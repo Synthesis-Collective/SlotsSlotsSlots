@@ -64,7 +64,7 @@ namespace SlotsSlotsSlots
                         float startingMagnitude = e.Data.Magnitude;
                         e.Data.Magnitude *= effectMultiplier;
                         carryWeightSpells.Add((spell.AsLink(),(int) startingMagnitude, (int)e.Data.Magnitude));
-                        if (deepCopySpell.Description.ToString().Contains($"carry") || deepCopySpell.Description.ToString().Contains($"Carry"))
+                        if ((deepCopySpell.Description.ToString().Contains($"carry") || deepCopySpell.Description.ToString().Contains($"Carry")) && deepCopySpell.Description.ToString().Contains($"{startingMagnitude}"))
                         {
                             if ((int)e.Data.Magnitude != 1)
                             {
@@ -109,7 +109,7 @@ namespace SlotsSlotsSlots
                                         if (fl.FormKey.Equals(carryWeightSpell.Spell.FormKey))
                                         {
                                             var deepCopyPerk = perk.DeepCopy();
-                                            if (deepCopyPerk.Description.ToString().Contains($"carry") || deepCopyPerk.Description.ToString().Contains($"Carry"))
+                                            if ((deepCopyPerk.Description.ToString().Contains($"carry") || deepCopyPerk.Description.ToString().Contains($"Carry")) && deepCopyPerk.Description.ToString().Contains($"{carryWeightSpell.OriginalCarryWeight}"))
                                             {
                                                 if (!carryWeightSpell.SlotAmount.Equals(1))
                                                 {
