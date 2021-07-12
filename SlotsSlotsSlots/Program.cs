@@ -52,7 +52,7 @@ namespace SlotsSlotsSlots
 
             (HashSet<IFormLinkGetter<IMagicEffectGetter>> carryWeight, HashSet<IFormLinkGetter<IMagicEffectGetter>> health) magicEffects = MagicEffects(state);
 
-            var carryWeightSpells = new HashSet<(IFormLinkGetter<ISpellGetter> Spell, int SlotAmount)>();
+            var carryWeightSpells = new HashSet<(IFormLinkGetter<ISpellGetter> Spell, int OriginalCarryWeight, int SlotAmount)>();
 
             foreach (var spell in state.LoadOrder.PriorityOrder.Spell().WinningOverrides())
             {
@@ -61,31 +61,64 @@ namespace SlotsSlotsSlots
                 {
                     if (magicEffects.carryWeight.Contains(e.BaseEffect))
                     {
+                        float startingMagnitude = e.Data.Magnitude;
                         e.Data.Magnitude *= effectMultiplier;
-                        carryWeightSpells.Add((spell.AsLink(), (int)e.Data.Magnitude));
-                        if (!(spell.Description.ToString().IsNullOrWhitespace())) deepCopySpell.Description += $"\n Alters your inventory space by {e.Data.Magnitude} Slots.";
+                        carryWeightSpells.Add((spell.AsLink(),(int) startingMagnitude, (int)e.Data.Magnitude));
+                        if (!(spell.Description.ToString().IsNullOrWhitespace()))
+                        {
+                            if ((int)e.Data.Magnitude != 1)
+                            {
+                                deepCopySpell.Description = deepCopySpell.Description
+                                    .ToString()
+                                    .Replace($"{(int)startingMagnitude}", $"{(int)e.Data.Magnitude}")
+                                    .Replace($"Carry Weight", $"Slots"); 
+                            }
+                            else
+                            {
+                                deepCopySpell.Description = deepCopySpell.Description
+                                    .ToString()
+                                    .Replace($"{(int)startingMagnitude}", $"{(int)e.Data.Magnitude}")
+                                    .Replace($"Carry Weight", $"Slot");
+                            }
+                        }
+                        Console.WriteLine($"{spell.EditorID.ToString()} was considered a CarryWeight altering Spell and adjusted.");
                         state.PatchMod.Spells.Set(deepCopySpell);                       
                     }
                 }
             }; 
 
-            var carryWeightSpellFormKeys = carryWeightSpells.Select(x => x.Spell.FormKey).ToHashSet();
-
             foreach (var perk in state.LoadOrder.PriorityOrder.Perk().WinningOverrides())
             {
-                foreach (var effect in perk.ContainedFormLinks)
+                foreach (var effect in perk.Effects)
                 {
-                    if (carryWeightSpellFormKeys.Contains(effect.FormKey))
+                    foreach (var spell in carryWeightSpells)
                     {
-                        var deepcopyPerk = perk.DeepCopy();
-                        if (!perk.Description.ToString().IsNullOrWhitespace())
+                        foreach (var effectSpell in effect.ContainedFormLinks)
                         {
-                            if (!deepcopyPerk.Description.ToString().EndsWith($"\nIf this perk lists Carry Weigth devide it by {1 / effectMultiplier}."))
+                            if (effectSpell.Equals(spell.Spell.FormKey))
                             {
-                                deepcopyPerk.Description += $"\nIf this perk lists Carry Weigth devide it by {1 / effectMultiplier}.";
+                                if (!perk.Description.ToString().IsNullOrWhitespace())
+                                {
+                                    var deepCopyPerk = perk.DeepCopy();
+                                    if (spell.SlotAmount != 1)
+                                    {
+                                        deepCopyPerk.Description = deepCopyPerk.Description
+                                            .ToString()
+                                            .Replace($"{spell.OriginalCarryWeight}", $"{spell.SlotAmount}")
+                                            .Replace($"Carry Weight", $"Slots");
+                                    }
+                                    else
+                                    {
+                                        deepCopyPerk.Description = deepCopyPerk.Description
+                                            .ToString()
+                                            .Replace($"{spell.OriginalCarryWeight}", $"{spell.SlotAmount}")
+                                            .Replace($"Carry Weight", $"Slot");
+                                    }
+                                    Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and adjusted.");
+                                    state.PatchMod.Perks.Set(deepCopyPerk);
+                                }
                             }
                         }
-                        state.PatchMod.Perks.Set(deepcopyPerk);
                     }
                 }
             };
@@ -273,8 +306,9 @@ namespace SlotsSlotsSlots
             foreach (var e in state.LoadOrder.PriorityOrder.MagicEffect().WinningOverrides())
             {
                 if (e.Archetype.ActorValue.Equals(ActorValue.CarryWeight)
-                    && !e.TargetType.Equals(TargetType.Aimed)
-                    && !e.TargetType.Equals(TargetType.Touch))
+                    //&& !e.TargetType.Equals(TargetType.Aimed)
+                    //&& !e.TargetType.Equals(TargetType.Touch)
+                    )
                 {
                     foundCarryWeight.Add(e.AsLink());
                 }
