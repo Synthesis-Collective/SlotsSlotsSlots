@@ -91,27 +91,28 @@ namespace SlotsSlotsSlots
             {
                 foreach (var effect in perk.Effects)
                 {
-                    foreach (var spell in carryWeightSpells)
+                    foreach (var carryWeightSpell in carryWeightSpells)
                     {
                         foreach (var effectSpell in effect.ContainedFormLinks)
                         {
-                            if (effectSpell.Equals(spell.Spell.FormKey))
+                            if (effectSpell.Equals(carryWeightSpell.Spell.FormKey))
                             {
+                                Console.WriteLine($"Reached {perk.EditorID.ToString()}.");
                                 if (!perk.Description.ToString().IsNullOrWhitespace())
                                 {
                                     var deepCopyPerk = perk.DeepCopy();
-                                    if (spell.SlotAmount != 1)
+                                    if (!carryWeightSpell.SlotAmount.Equals(1))
                                     {
                                         deepCopyPerk.Description = deepCopyPerk.Description
                                             .ToString()
-                                            .Replace($"{spell.OriginalCarryWeight}", $"{spell.SlotAmount}")
+                                            .Replace($"{carryWeightSpell.OriginalCarryWeight}", $"{carryWeightSpell.SlotAmount}")
                                             .Replace($"Carry Weight", $"Slots");
                                     }
                                     else
                                     {
                                         deepCopyPerk.Description = deepCopyPerk.Description
                                             .ToString()
-                                            .Replace($"{spell.OriginalCarryWeight}", $"{spell.SlotAmount}")
+                                            .Replace($"{carryWeightSpell.OriginalCarryWeight}", $"{carryWeightSpell.SlotAmount}")
                                             .Replace($"Carry Weight", $"Slot");
                                     }
                                     Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and the description adjusted.");
