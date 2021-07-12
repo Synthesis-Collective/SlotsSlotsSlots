@@ -114,7 +114,7 @@ namespace SlotsSlotsSlots
                                             .Replace($"{spell.OriginalCarryWeight}", $"{spell.SlotAmount}")
                                             .Replace($"Carry Weight", $"Slot");
                                     }
-                                    Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and adjusted.");
+                                    Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and the description adjusted.");
                                     state.PatchMod.Perks.Set(deepCopyPerk);
                                 }
                             }
