@@ -71,17 +71,20 @@ namespace SlotsSlotsSlots
                                 deepCopySpell.Description = deepCopySpell.Description
                                     .ToString()
                                     .Replace($"{(int)startingMagnitude}", $"{(int)e.Data.Magnitude}")
-                                    .Replace($"Carry Weight", $"Slots"); 
+                                    .Replace($"Carry Weight is", "Slots are")
+                                    .Replace($"Carry Weight", $"Slots");
+                                Console.WriteLine($"{spell.EditorID.ToString()} was considered a CarryWeight altering Perk and the description adjusted.\nToo \"{ deepCopySpell.Description}\"");
                             }
                             else
                             {
                                 deepCopySpell.Description = deepCopySpell.Description
                                     .ToString()
                                     .Replace($"{(int)startingMagnitude}", $"{(int)e.Data.Magnitude}")
+                                    .Replace($"Carry Weight is", "Slots are")
                                     .Replace($"Carry Weight", $"Slot");
+                                Console.WriteLine($"{spell.EditorID.ToString()} was considered a CarryWeight altering Perk and the description adjusted.\nToo \"{ deepCopySpell.Description}\"");
                             }
                         }
-                        Console.WriteLine($"{spell.EditorID.ToString()} was considered a CarryWeight altering Spell and adjusted.");
                         state.PatchMod.Spells.Set(deepCopySpell);                       
                     }
                 }
@@ -106,13 +109,14 @@ namespace SlotsSlotsSlots
                                         if (fl.FormKey.Equals(carryWeightSpell.Spell.FormKey))
                                         {
                                             var deepCopyPerk = perk.DeepCopy();
-                                            if (deepCopyPerk.Description.ToString().Contains("Carry Weight") && deepCopyPerk.Description.ToString().Contains($"{carryWeightSpell.OriginalCarryWeight}"))
+                                            if (deepCopyPerk.Description.ToString().Contains($"{carryWeightSpell.OriginalCarryWeight}"))
                                             {
                                                 if (!carryWeightSpell.SlotAmount.Equals(1))
                                                 {
                                                     deepCopyPerk.Description = deepCopyPerk.Description
                                                         .ToString()
                                                         .Replace($"{carryWeightSpell.OriginalCarryWeight}", $"{carryWeightSpell.SlotAmount}")
+                                                        .Replace($"Carry Weight is", "Slots are")
                                                         .Replace($"Carry Weight", $"Slots");
                                                     Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and the description adjusted.\nToo \"{ deepCopyPerk.Description}\"");
                                                 }
@@ -121,6 +125,7 @@ namespace SlotsSlotsSlots
                                                     deepCopyPerk.Description = deepCopyPerk.Description
                                                         .ToString()
                                                         .Replace($"{carryWeightSpell.OriginalCarryWeight}", $"{carryWeightSpell.SlotAmount}")
+                                                        .Replace($"Carry Weight is", "Slots are")
                                                         .Replace($"Carry Weight", $"Slot");
                                                     Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and the description adjusted.\nToo \"{ deepCopyPerk.Description}\"");
                                                 }
