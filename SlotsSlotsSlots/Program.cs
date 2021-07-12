@@ -105,24 +105,27 @@ namespace SlotsSlotsSlots
                                     {
                                         if (fl.FormKey.Equals(carryWeightSpell.Spell.FormKey))
                                         {
-                                            Console.WriteLine($"Reached {perk.EditorID.ToString()}.");
                                             var deepCopyPerk = perk.DeepCopy();
-                                            if (!carryWeightSpell.SlotAmount.Equals(1))
+                                            if (deepCopyPerk.Description.ToString().Contains("Carry Weight") && deepCopyPerk.Description.ToString().Contains($"{carryWeightSpell.OriginalCarryWeight}"))
                                             {
-                                                deepCopyPerk.Description = deepCopyPerk.Description
-                                                    .ToString()
-                                                    .Replace($"{carryWeightSpell.OriginalCarryWeight}", $"{carryWeightSpell.SlotAmount}")
-                                                    .Replace($"Carry Weight", $"Slots");
+                                                if (!carryWeightSpell.SlotAmount.Equals(1))
+                                                {
+                                                    deepCopyPerk.Description = deepCopyPerk.Description
+                                                        .ToString()
+                                                        .Replace($"{carryWeightSpell.OriginalCarryWeight}", $"{carryWeightSpell.SlotAmount}")
+                                                        .Replace($"Carry Weight", $"Slots");
+                                                    Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and the description adjusted.\nToo \"{ deepCopyPerk.Description}\"");
+                                                }
+                                                else
+                                                {
+                                                    deepCopyPerk.Description = deepCopyPerk.Description
+                                                        .ToString()
+                                                        .Replace($"{carryWeightSpell.OriginalCarryWeight}", $"{carryWeightSpell.SlotAmount}")
+                                                        .Replace($"Carry Weight", $"Slot");
+                                                    Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and the description adjusted.\nToo \"{ deepCopyPerk.Description}\"");
+                                                }
+                                                state.PatchMod.Perks.Set(deepCopyPerk);
                                             }
-                                            else
-                                            {
-                                                deepCopyPerk.Description = deepCopyPerk.Description
-                                                    .ToString()
-                                                    .Replace($"{carryWeightSpell.OriginalCarryWeight}", $"{carryWeightSpell.SlotAmount}")
-                                                    .Replace($"Carry Weight", $"Slot");
-                                            }
-                                            Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and the description adjusted.");
-                                            state.PatchMod.Perks.Set(deepCopyPerk);
                                         }
                                     }
                                 }
