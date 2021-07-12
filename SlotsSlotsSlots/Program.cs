@@ -95,18 +95,17 @@ namespace SlotsSlotsSlots
                 {
                     if(carryWeightSpellFormKeys.Contains(effect.FormKey))
                     {
-                        Console.WriteLine($"Reached {perk.EditorID.ToString()}.");
-                        foreach (var carryWeightSpell in carryWeightSpells)
+                        if (!perk.Description.ToString().IsNullOrWhitespace())
                         {
-                            
-                            if (!perk.Description.ToString().IsNullOrWhitespace())
+                            foreach (var e in perk.Effects)
                             {
-                                foreach (var e in perk.Effects)
+                                foreach (var fl in e.ContainedFormLinks)
                                 {
-                                    foreach (var fl in e.ContainedFormLinks)
+                                    foreach (var carryWeightSpell in carryWeightSpells)
                                     {
                                         if (fl.FormKey.Equals(carryWeightSpell.Spell.FormKey))
                                         {
+                                            Console.WriteLine($"Reached {perk.EditorID.ToString()}.");
                                             var deepCopyPerk = perk.DeepCopy();
                                             if (!carryWeightSpell.SlotAmount.Equals(1))
                                             {
