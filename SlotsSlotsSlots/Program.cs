@@ -73,7 +73,7 @@ namespace SlotsSlotsSlots
                                     .Replace($"{(int)startingMagnitude}", $"{(int)e.Data.Magnitude}")
                                     .Replace($"Carry Weight is", "Slots are")
                                     .Replace($"Carry Weight", $"Slots");
-                                Console.WriteLine($"{spell.EditorID.ToString()} was considered a CarryWeight altering Perk and the description adjusted.\nToo \"{ deepCopySpell.Description}\"");
+                                Console.WriteLine($"{spell.EditorID.ToString()} was considered a CarryWeight altering Spell and the description adjusted:\n \"{ deepCopySpell.Description}\"\n");
                             }
                             else
                             {
@@ -82,7 +82,7 @@ namespace SlotsSlotsSlots
                                     .Replace($"{(int)startingMagnitude}", $"{(int)e.Data.Magnitude}")
                                     .Replace($"Carry Weight is", "Slots are")
                                     .Replace($"Carry Weight", $"Slot");
-                                Console.WriteLine($"{spell.EditorID.ToString()} was considered a CarryWeight altering Perk and the description adjusted.\nToo \"{ deepCopySpell.Description}\"");
+                                Console.WriteLine($"{spell.EditorID.ToString()} was considered a CarryWeight altering Spell and the description adjusted:\n \"{ deepCopySpell.Description}\"\n");
                             }
                         }
                         state.PatchMod.Spells.Set(deepCopySpell);                       
@@ -118,7 +118,7 @@ namespace SlotsSlotsSlots
                                                         .Replace($"{carryWeightSpell.OriginalCarryWeight}", $"{carryWeightSpell.SlotAmount}")
                                                         .Replace($"Carry Weight is", "Slots are")
                                                         .Replace($"Carry Weight", $"Slots");
-                                                    Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and the description adjusted.\nToo \"{ deepCopyPerk.Description}\"");
+                                                    Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and the description adjusted:\n \"{ deepCopyPerk.Description}\"\n");
                                                 }
                                                 else
                                                 {
@@ -127,7 +127,7 @@ namespace SlotsSlotsSlots
                                                         .Replace($"{carryWeightSpell.OriginalCarryWeight}", $"{carryWeightSpell.SlotAmount}")
                                                         .Replace($"Carry Weight is", "Slots are")
                                                         .Replace($"Carry Weight", $"Slot");
-                                                    Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and the description adjusted.\nToo \"{ deepCopyPerk.Description}\"");
+                                                    Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and the description adjusted:\n \"{ deepCopyPerk.Description}\"\n");
                                                 }
                                                 state.PatchMod.Perks.Set(deepCopyPerk);
                                             }
