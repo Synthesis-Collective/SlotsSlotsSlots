@@ -78,23 +78,11 @@ namespace SlotsSlotsSlots
                     if (carryWeightSpellFormKeys.Contains(effect.FormKey))
                     {
                         var deepcopyPerk = perk.DeepCopy();
-                        foreach (var carryWeightSpell in carryWeightSpells)
+                        if (!perk.Description.ToString().IsNullOrWhitespace())
                         {
-                            if (!perk.Description.ToString().IsNullOrWhitespace())
+                            if (!deepcopyPerk.Description.ToString().EndsWith($"\nIf this perk lists Carry Weigth devide it by {1 / effectMultiplier}."))
                             {
-                                foreach (var e in perk.Effects)
-                                {
-                                    foreach (var fl in e.ContainedFormLinks)
-                                    {
-                                        if (fl.FormKey.Equals(carryWeightSpell.Spell.FormKey))
-                                        {
-                                            if (!deepcopyPerk.Description.ToString().EndsWith($"\nIf this perk lists Carry Weigth devide it by {1 / effectMultiplier}."))
-                                            {
-                                                deepcopyPerk.Description += $"\nIf this perk lists Carry Weigth devide it by {1 / effectMultiplier}.";
-                                            }
-                                        }
-                                    }
-                                }
+                                deepcopyPerk.Description += $"\nIf this perk lists Carry Weigth devide it by {1 / effectMultiplier}.";
                             }
                         }
                         state.PatchMod.Perks.Set(deepcopyPerk);
