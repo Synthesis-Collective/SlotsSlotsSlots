@@ -85,36 +85,48 @@ namespace SlotsSlotsSlots
                         state.PatchMod.Spells.Set(deepCopySpell);                       
                     }
                 }
-            }; 
+            };
 
+            var carryWeightSpellFormKeys = carryWeightSpells.Select(x => x.Spell.FormKey).ToHashSet();
+            
             foreach (var perk in state.LoadOrder.PriorityOrder.Perk().WinningOverrides())
             {
                 foreach (var effect in perk.ContainedFormLinks)
                 {
-                    foreach (var carryWeightSpell in carryWeightSpells)
+                    if(carryWeightSpellFormKeys.Contains(effect.FormKey))
                     {
-                        if (effect.Equals(carryWeightSpell.Spell.FormKey))
+                        Console.WriteLine($"Reached {perk.EditorID.ToString()}.");
+                        foreach (var carryWeightSpell in carryWeightSpells)
                         {
-                            Console.WriteLine($"Reached {perk.EditorID.ToString()}.");
+                            
                             if (!perk.Description.ToString().IsNullOrWhitespace())
                             {
-                                var deepCopyPerk = perk.DeepCopy();
-                                if (!carryWeightSpell.SlotAmount.Equals(1))
+                                foreach (var e in perk.Effects)
                                 {
-                                    deepCopyPerk.Description = deepCopyPerk.Description
-                                        .ToString()
-                                        .Replace($"{carryWeightSpell.OriginalCarryWeight}", $"{carryWeightSpell.SlotAmount}")
-                                        .Replace($"Carry Weight", $"Slots");
+                                    foreach (var fl in e.ContainedFormLinks)
+                                    {
+                                        if (fl.FormKey.Equals(carryWeightSpell.Spell.FormKey))
+                                        {
+                                            var deepCopyPerk = perk.DeepCopy();
+                                            if (!carryWeightSpell.SlotAmount.Equals(1))
+                                            {
+                                                deepCopyPerk.Description = deepCopyPerk.Description
+                                                    .ToString()
+                                                    .Replace($"{carryWeightSpell.OriginalCarryWeight}", $"{carryWeightSpell.SlotAmount}")
+                                                    .Replace($"Carry Weight", $"Slots");
+                                            }
+                                            else
+                                            {
+                                                deepCopyPerk.Description = deepCopyPerk.Description
+                                                    .ToString()
+                                                    .Replace($"{carryWeightSpell.OriginalCarryWeight}", $"{carryWeightSpell.SlotAmount}")
+                                                    .Replace($"Carry Weight", $"Slot");
+                                            }
+                                            Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and the description adjusted.");
+                                            state.PatchMod.Perks.Set(deepCopyPerk);
+                                        }
+                                    }
                                 }
-                                else
-                                {
-                                    deepCopyPerk.Description = deepCopyPerk.Description
-                                        .ToString()
-                                        .Replace($"{carryWeightSpell.OriginalCarryWeight}", $"{carryWeightSpell.SlotAmount}")
-                                        .Replace($"Carry Weight", $"Slot");
-                                }
-                                Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and the description adjusted.");
-                                state.PatchMod.Perks.Set(deepCopyPerk);
                             }
                         }
                     }
