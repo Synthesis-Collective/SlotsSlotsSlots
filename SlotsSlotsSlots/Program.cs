@@ -53,10 +53,10 @@ namespace SlotsSlotsSlots
 
             (HashSet<IFormLinkGetter<IMagicEffectGetter>> carryWeight, HashSet<IFormLinkGetter<IMagicEffectGetter>> health) magicEffects = MagicEffects(state);
 
-            var carryWeightSpells = new HashSet<(Dictionary<FormKey, HashSet<IFormLinkNullable<IMagicEffectGetter>>> SpellAndEffects,Dictionary<IFormLinkNullable<IMagicEffectGetter>,HashSet<int>> EffectAndMagnitudes)>();
+            var carryWeightSpells = new HashSet<(Dictionary<FormKey, HashSet<FormKey>> SpellAndEffects,Dictionary<FormKey,HashSet<int>> EffectAndMagnitudes)>();
 
-            var SpellAndEffects = new Dictionary<FormKey, HashSet<IFormLinkNullable<IMagicEffectGetter>>>();
-            var EffectAndMagnitudes = new Dictionary<IFormLinkNullable<IMagicEffectGetter>, HashSet<int>>();
+            var SpellAndEffects = new Dictionary<FormKey, HashSet<FormKey>>();
+            var EffectAndMagnitudes = new Dictionary<FormKey, HashSet<int>>();
             
 
             foreach (var spell in state.LoadOrder.PriorityOrder.Spell().WinningOverrides())
@@ -69,11 +69,11 @@ namespace SlotsSlotsSlots
                         float startingMagnitude = e.Data.Magnitude;
                         e.Data.Magnitude *= effectMultiplier;
 
-                        SpellAndEffects.GetOrAdd(spell.FormKey).Add(e.BaseEffect);
+                        SpellAndEffects.GetOrAdd(spell.FormKey).Add(e.BaseEffect.FormKey);
 
                         var finalMagnitudesHashSet = new HashSet<int>();
                         finalMagnitudesHashSet.Add((int)startingMagnitude);
-                        if (EffectAndMagnitudes.TryGetValue(e.BaseEffect, out var magnitudesHashSet))
+                        if (EffectAndMagnitudes.TryGetValue(e.BaseEffect.FormKey, out var magnitudesHashSet))
                         {
                             foreach (var magnitudeInSet in magnitudesHashSet)
                             {
@@ -82,10 +82,11 @@ namespace SlotsSlotsSlots
                             }
                         }
 
-                        EffectAndMagnitudes.GetOrAdd(e.BaseEffect).UnionWith(finalMagnitudesHashSet);
+                        EffectAndMagnitudes.GetOrAdd(e.BaseEffect.FormKey).UnionWith(finalMagnitudesHashSet);
+
                         carryWeightSpells.Add((SpellAndEffects,EffectAndMagnitudes));
 
-                        if ((deepCopySpell.Description.ToString().Contains($"carry") || deepCopySpell.Description.ToString().Contains($"Carry")) && deepCopySpell.Description.ToString().Contains($"{startingMagnitude}"))
+                        if (deepCopySpell.Description.ToString().Contains($"carry") || deepCopySpell.Description.ToString().Contains($"Carry"))
                         {
                             if ((int)e.Data.Magnitude != 1)
                             {
@@ -130,9 +131,9 @@ namespace SlotsSlotsSlots
                                     {
                                         foreach (var spellEffect in spellEffectSet)
                                         {
-                                            if (carryWeightSpell.EffectAndMagnitudes.TryGetValue(spellEffect, out var magnitudesHasSet))
+                                            if (carryWeightSpell.EffectAndMagnitudes.TryGetValue(spellEffect, out var magnitudesHashSet))
                                             {
-                                                foreach (int magnitude in magnitudesHasSet)
+                                                foreach (int magnitude in magnitudesHashSet)
                                                 {
                                                     if ((deepCopyPerk.Description.ToString().Contains($"carry") || deepCopyPerk.Description.ToString().Contains($"Carry")) && deepCopyPerk.Description.ToString().Contains($" {magnitude} "))
                                                     {
