@@ -15,7 +15,7 @@ namespace SlotsSlotsSlots
         [SynthesisTooltip("This multiplies only the base value,the stat will still be upgraded on levelup, and with perks/spells/enchantments.")]
         public float BaseMultiplier = 0.1f;
         [SynthesisOrder]
-        [SynthesisSettingName("Carryweight Effect Multiplier")]
+        [SynthesisSettingName("Carry Weight Effect Multiplier")]
         [SynthesisDescription("This is a value all loaded effects that alter carryweight get multiplied with to make them work with the lower weigth values of the slot system.")]
         [SynthesisTooltip("This is a value all loaded effects that alter carryweight get multiplied with to make them work with the lower weigth values of the slot system.\nA value of 0.2 would mean the effect has 20% effectiveness.")]
         public float CarryweightEffectMultiplier = 0.2f;
