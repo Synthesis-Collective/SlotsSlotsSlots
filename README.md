@@ -3,7 +3,7 @@
 ## What is this ?
 
 This is an Customizable Inventory System Overhaul that, allows you to rebalance your game, by removing the weight from non combat related items 
-(I might have to look into scrools, as I migth have forgotten about those 👀) and standardizing the combat item weights in slot classes based onn their original carryweights.
+(I might have to look into scrools, but for now I like their default weight.) and standardizing the combat item weights in slot classes based onn their original carryweights.
 
 But what about Standing Stones, Perks and other ways of increasing your carry capacity ? Well all those are nerfed as well (by a factor of your choosing).
 
