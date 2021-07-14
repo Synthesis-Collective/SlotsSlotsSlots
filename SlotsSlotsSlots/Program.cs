@@ -33,6 +33,7 @@ namespace SlotsSlotsSlots
             float baseCarryWeightMult = Settings.BaseMultiplier;
             float effectMultiplier = Settings.CarryweightEffectMultiplier;
             float potionWeights = Settings.PotionSlotUse;
+            float scrollWeights = Settings.ScrollSlotUse;
             bool noHealFromWeightless = Settings.WeightlessItemsOfferNoHealing;
             int minWeaponSlots = Settings.MinimumUsedWeaponSlots;
             int maxWeaponSlots = Settings.MaximumUsedWeaponSlots;
@@ -185,6 +186,12 @@ namespace SlotsSlotsSlots
                     .Where(m => m.Weight != 0.0f)
                     .Select(m => m.DeepCopy())
                     .Do(m => m.Weight = 0.0f));
+
+            state.PatchMod.Scrolls.Set(
+                state.LoadOrder.PriorityOrder.Scroll().WinningOverrides()
+                    .Where(s => s.Weight != 0.0f)
+                    .Select(s => s.DeepCopy())
+                    .Do(s => s.Weight = scrollWeights));
 
             foreach (var ingestible in state.LoadOrder.PriorityOrder.Ingestible().WinningOverrides())
             {
