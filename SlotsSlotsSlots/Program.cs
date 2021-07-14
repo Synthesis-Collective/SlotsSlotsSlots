@@ -50,9 +50,14 @@ namespace SlotsSlotsSlots
                     })
             );
 
+
             (HashSet<IFormLinkGetter<IMagicEffectGetter>> carryWeight, HashSet<IFormLinkGetter<IMagicEffectGetter>> health) magicEffects = MagicEffects(state);
 
-            var carryWeightSpells = new HashSet<(IFormLinkGetter<ISpellGetter> Spell, int OriginalCarryWeight, int SlotAmount)>();
+            var carryWeightSpells = new HashSet<(Dictionary<FormKey, HashSet<IFormLinkNullable<IMagicEffectGetter>>> SpellAndEffects,Dictionary<IFormLinkNullable<IMagicEffectGetter>,HashSet<int>> EffectAndMagnitudes)>();
+
+            var SpellAndEffects = new Dictionary<FormKey, HashSet<IFormLinkNullable<IMagicEffectGetter>>>();
+            var EffectAndMagnitudes = new Dictionary<IFormLinkNullable<IMagicEffectGetter>, HashSet<int>>();
+            
 
             foreach (var spell in state.LoadOrder.PriorityOrder.Spell().WinningOverrides())
             {
@@ -63,7 +68,23 @@ namespace SlotsSlotsSlots
                     {
                         float startingMagnitude = e.Data.Magnitude;
                         e.Data.Magnitude *= effectMultiplier;
-                        carryWeightSpells.Add((spell.AsLink(),(int) startingMagnitude, (int)e.Data.Magnitude));
+
+                        SpellAndEffects.GetOrAdd(spell.FormKey).Add(e.BaseEffect);
+
+                        var finalMagnitudesHashSet = new HashSet<int>();
+                        finalMagnitudesHashSet.Add((int)startingMagnitude);
+                        if (EffectAndMagnitudes.TryGetValue(e.BaseEffect, out var magnitudesHashSet))
+                        {
+                            foreach (var magnitudeInSet in magnitudesHashSet)
+                            {
+                                finalMagnitudesHashSet.Add(magnitudeInSet);
+                                finalMagnitudesHashSet.Add(magnitudeInSet + (int)startingMagnitude);
+                            }
+                        }
+
+                        EffectAndMagnitudes.GetOrAdd(e.BaseEffect).UnionWith(finalMagnitudesHashSet);
+                        carryWeightSpells.Add((SpellAndEffects,EffectAndMagnitudes));
+
                         if ((deepCopySpell.Description.ToString().Contains($"carry") || deepCopySpell.Description.ToString().Contains($"Carry")) && deepCopySpell.Description.ToString().Contains($"{startingMagnitude}"))
                         {
                             if ((int)e.Data.Magnitude != 1)
@@ -90,46 +111,57 @@ namespace SlotsSlotsSlots
                 }
             };
 
-            var carryWeightSpellFormKeys = carryWeightSpells.Select(x => x.Spell.FormKey).ToHashSet();
+            // The following could profit from optimization, way to many foreach loops.
             
             foreach (var perk in state.LoadOrder.PriorityOrder.Perk().WinningOverrides())
             {
+                var deepCopyPerk = perk.DeepCopy();
                 foreach (var effect in perk.ContainedFormLinks)
                 {
-                    if(carryWeightSpellFormKeys.Contains(effect.FormKey))
+                    if (!perk.Description.ToString().IsNullOrWhitespace())
                     {
-                        if (!perk.Description.ToString().IsNullOrWhitespace())
+                        foreach (var e in perk.Effects)
                         {
-                            foreach (var e in perk.Effects)
+                            foreach (var fl in e.ContainedFormLinks)
                             {
-                                foreach (var fl in e.ContainedFormLinks)
+                                foreach (var carryWeightSpell in carryWeightSpells)
                                 {
-                                    foreach (var carryWeightSpell in carryWeightSpells)
+                                    if (carryWeightSpell.SpellAndEffects.TryGetValue(fl.FormKey, out var spellEffectSet))
                                     {
-                                        if (fl.FormKey.Equals(carryWeightSpell.Spell.FormKey))
+                                        foreach (var spellEffect in spellEffectSet)
                                         {
-                                            var deepCopyPerk = perk.DeepCopy();
-                                            if ((deepCopyPerk.Description.ToString().Contains($"carry") || deepCopyPerk.Description.ToString().Contains($"Carry")) && deepCopyPerk.Description.ToString().Contains($"{carryWeightSpell.OriginalCarryWeight}"))
+                                            if (carryWeightSpell.EffectAndMagnitudes.TryGetValue(spellEffect, out var magnitudesHasSet))
                                             {
-                                                if (!carryWeightSpell.SlotAmount.Equals(1))
+                                                foreach (int magnitude in magnitudesHasSet)
                                                 {
-                                                    deepCopyPerk.Description = deepCopyPerk.Description
-                                                        .ToString()
-                                                        .Replace($"{carryWeightSpell.OriginalCarryWeight}", $"{carryWeightSpell.SlotAmount}")
-                                                        .Replace($"Carry Weight is", "Slots are")
-                                                        .Replace($"Carry Weight", $"Slots");
-                                                    Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and the description, if needed, adjusted:\n \"{ deepCopyPerk.Description}\"\n");
+                                                    if ((deepCopyPerk.Description.ToString().Contains($"carry") || deepCopyPerk.Description.ToString().Contains($"Carry")) && deepCopyPerk.Description.ToString().Contains($" {magnitude} "))
+                                                    {
+                                                        int slots = (int)(magnitude * effectMultiplier);
+                                                        if (slots != 1)
+                                                        {
+                                                            deepCopyPerk.Description = deepCopyPerk.Description
+                                                                .ToString()
+                                                                .Replace($" {magnitude} ", $" {slots} ")
+                                                                .Replace($" {magnitude}.", $" {slots}.")
+                                                                .Replace($" {magnitude},", $" {slots},")
+                                                                .Replace($"Carry Weight is", "Slots are")
+                                                                .Replace($"Carry Weight", $"Slots");
+                                                            Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and the description, if needed, adjusted:\n \"{ deepCopyPerk.Description}\"\n");
+                                                        }
+                                                        else
+                                                        {
+                                                            deepCopyPerk.Description = deepCopyPerk.Description
+                                                                .ToString()
+                                                                .Replace($" {magnitude} ", $" {slots} ")
+                                                                .Replace($" {magnitude}.", $" {slots}.")
+                                                                .Replace($" {magnitude},", $" {slots},")
+                                                                .Replace($"Carry Weight is", "Slots are")
+                                                                .Replace($"Carry Weight", $"Slot");
+                                                            Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and the description, if needed, adjusted:\n \"{ deepCopyPerk.Description}\"\n");
+                                                        }
+                                                        state.PatchMod.Perks.Set(deepCopyPerk);
+                                                    }
                                                 }
-                                                else
-                                                {
-                                                    deepCopyPerk.Description = deepCopyPerk.Description
-                                                        .ToString()
-                                                        .Replace($"{carryWeightSpell.OriginalCarryWeight}", $"{carryWeightSpell.SlotAmount}")
-                                                        .Replace($"Carry Weight is", "Slots are")
-                                                        .Replace($"Carry Weight", $"Slot");
-                                                    Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and the description, if needed, adjusted:\n \"{ deepCopyPerk.Description}\"\n");
-                                                }
-                                                state.PatchMod.Perks.Set(deepCopyPerk);
                                             }
                                         }
                                     }
@@ -137,7 +169,9 @@ namespace SlotsSlotsSlots
                             }
                         }
                     }
+                
                 }
+                
             };
 
             state.PatchMod.MiscItems.Set(
@@ -322,10 +356,7 @@ namespace SlotsSlotsSlots
             var foundHealth = new HashSet<IFormLinkGetter<IMagicEffectGetter>>();
             foreach (var e in state.LoadOrder.PriorityOrder.MagicEffect().WinningOverrides())
             {
-                if (e.Archetype.ActorValue.Equals(ActorValue.CarryWeight)
-                    //&& !e.TargetType.Equals(TargetType.Aimed)
-                    //&& !e.TargetType.Equals(TargetType.Touch)
-                    )
+                if (e.Archetype.ActorValue.Equals(ActorValue.CarryWeight))
                 {
                     foundCarryWeight.Add(e.AsLink());
                 }
@@ -338,5 +369,6 @@ namespace SlotsSlotsSlots
             }
             return (foundCarryWeight, foundHealth);
         }
+
     }
 }
