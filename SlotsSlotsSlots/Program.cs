@@ -53,61 +53,66 @@ namespace SlotsSlotsSlots
 
             (HashSet<IFormLinkGetter<IMagicEffectGetter>> carryWeight, HashSet<IFormLinkGetter<IMagicEffectGetter>> health) magicEffects = MagicEffects(state);
 
-            var carryWeightSpells = new HashSet<(Dictionary<FormKey, HashSet<FormKey>> SpellAndEffects,Dictionary<FormKey,HashSet<int>> EffectAndMagnitudes)>();
+            var carryWeightSpells = new HashSet<(Dictionary<FormKey, List<FormKey>> SpellAndEffects,Dictionary<FormKey,HashSet<int>> EffectAndMagnitudes)>();
 
-            var SpellAndEffects = new Dictionary<FormKey, HashSet<FormKey>>();
+            var SpellAndEffects = new Dictionary<FormKey, List<FormKey>>();
             var EffectAndMagnitudes = new Dictionary<FormKey, HashSet<int>>();
             
 
             foreach (var spell in state.LoadOrder.PriorityOrder.Spell().WinningOverrides())
             {
-                var deepCopySpell = spell.DeepCopy();
-                foreach (var e in deepCopySpell.Effects)
-                {
-                    if (magicEffects.carryWeight.Contains(e.BaseEffect))
+                if (!spell.EditorID.ToString().Equals("AbDragon")) { 
+                    var deepCopySpell = spell.DeepCopy();
+                    foreach (var e in deepCopySpell.Effects)
                     {
-                        float startingMagnitude = e.Data.Magnitude;
-                        e.Data.Magnitude *= effectMultiplier;
-
-                        SpellAndEffects.GetOrAdd(spell.FormKey).Add(e.BaseEffect.FormKey);
-
-                        var finalMagnitudesHashSet = new HashSet<int>();
-                        finalMagnitudesHashSet.Add((int)startingMagnitude);
-                        if (EffectAndMagnitudes.TryGetValue(e.BaseEffect.FormKey, out var magnitudesHashSet))
+                        foreach (var carryWeightEffect in magicEffects.carryWeight)
                         {
-                            foreach (var magnitudeInSet in magnitudesHashSet)
+                            if (e.BaseEffect.Equals(carryWeightEffect))
                             {
-                                finalMagnitudesHashSet.Add(magnitudeInSet);
-                                finalMagnitudesHashSet.Add(magnitudeInSet + (int)startingMagnitude);
+                                float startingMagnitude = e.Data.Magnitude;
+
+                                e.Data.Magnitude *= effectMultiplier;
+
+                                SpellAndEffects.GetOrAdd(spell.FormKey).Add(e.BaseEffect.FormKey);
+
+                                var finalMagnitudesHashset = new HashSet<int>();
+                                finalMagnitudesHashset.Add((int)startingMagnitude);
+                                if (EffectAndMagnitudes.TryGetValue(e.BaseEffect.FormKey, out var magnitudesHashSet))
+                                {
+                                    foreach (var magnitudeInSet in magnitudesHashSet)
+                                    {
+                                        finalMagnitudesHashset.Add(magnitudeInSet);
+                                        finalMagnitudesHashset.Add(magnitudeInSet + (int)startingMagnitude);
+                                    }
+                                }
+                                EffectAndMagnitudes.GetOrAdd(e.BaseEffect.FormKey).UnionWith(finalMagnitudesHashset);
+
+                                carryWeightSpells.Add((SpellAndEffects, EffectAndMagnitudes));
+
+                                if ((deepCopySpell.Description.ToString().Contains($"carry") || deepCopySpell.Description.ToString().Contains($"Carry")) && deepCopySpell.Description.ToString().Contains($"{(int)startingMagnitude}"))
+                                {
+                                    if ((int)e.Data.Magnitude != 1)
+                                    {
+                                        deepCopySpell.Description = deepCopySpell.Description
+                                            .ToString()
+                                            .Replace($"{(int)startingMagnitude}", $"{(int)e.Data.Magnitude}")
+                                            .Replace($"Carry Weight is", "Slots are")
+                                            .Replace($"Carry Weight", $"Slots");
+                                        Console.WriteLine($"{spell.EditorID.ToString()} was considered a CarryWeight altering Spell and the description, if needed, adjusted:\n \"{ deepCopySpell.Description}\"\n");
+                                    }
+                                    else
+                                    {
+                                        deepCopySpell.Description = deepCopySpell.Description
+                                            .ToString()
+                                            .Replace($"{(int)startingMagnitude}", $"{(int)e.Data.Magnitude}")
+                                            .Replace($"Carry Weight is", "Slots are")
+                                            .Replace($"Carry Weight", $"Slot");
+                                        Console.WriteLine($"{spell.EditorID.ToString()} was considered a CarryWeight altering Spell and the description, if needed, adjusted:\n \"{ deepCopySpell.Description}\"\n");
+                                    }
+                                }
+                                state.PatchMod.Spells.Set(deepCopySpell);
                             }
                         }
-
-                        EffectAndMagnitudes.GetOrAdd(e.BaseEffect.FormKey).UnionWith(finalMagnitudesHashSet);
-
-                        carryWeightSpells.Add((SpellAndEffects,EffectAndMagnitudes));
-
-                        if (deepCopySpell.Description.ToString().Contains($"carry") || deepCopySpell.Description.ToString().Contains($"Carry"))
-                        {
-                            if ((int)e.Data.Magnitude != 1)
-                            {
-                                deepCopySpell.Description = deepCopySpell.Description
-                                    .ToString()
-                                    .Replace($"{(int)startingMagnitude}", $"{(int)e.Data.Magnitude}")
-                                    .Replace($"Carry Weight is", "Slots are")
-                                    .Replace($"Carry Weight", $"Slots");
-                                Console.WriteLine($"{spell.EditorID.ToString()} was considered a CarryWeight altering Spell and the description, if needed, adjusted:\n \"{ deepCopySpell.Description}\"\n");
-                            }
-                            else
-                            {
-                                deepCopySpell.Description = deepCopySpell.Description
-                                    .ToString()
-                                    .Replace($"{(int)startingMagnitude}", $"{(int)e.Data.Magnitude}")
-                                    .Replace($"Carry Weight is", "Slots are")
-                                    .Replace($"Carry Weight", $"Slot");
-                                Console.WriteLine($"{spell.EditorID.ToString()} was considered a CarryWeight altering Spell and the description, if needed, adjusted:\n \"{ deepCopySpell.Description}\"\n");
-                            }
-                        }
-                        state.PatchMod.Spells.Set(deepCopySpell);                       
                     }
                 }
             };
@@ -131,11 +136,11 @@ namespace SlotsSlotsSlots
                                     {
                                         foreach (var spellEffect in spellEffectSet)
                                         {
-                                            if (carryWeightSpell.EffectAndMagnitudes.TryGetValue(spellEffect, out var magnitudesHashSet))
+                                            if (carryWeightSpell.EffectAndMagnitudes.TryGetValue(spellEffect, out var magnitudesList))
                                             {
-                                                foreach (int magnitude in magnitudesHashSet)
+                                                foreach (int magnitude in magnitudesList)
                                                 {
-                                                    if ((deepCopyPerk.Description.ToString().Contains($"carry") || deepCopyPerk.Description.ToString().Contains($"Carry")) && deepCopyPerk.Description.ToString().Contains($" {magnitude} "))
+                                                    if ((deepCopyPerk.Description.ToString().Contains($"carry") || deepCopyPerk.Description.ToString().Contains($"Carry")) && deepCopyPerk.Description.ToString().Contains($"{magnitude}"))
                                                     {
                                                         int slots = (int)(magnitude * effectMultiplier);
                                                         if (slots != 1)
