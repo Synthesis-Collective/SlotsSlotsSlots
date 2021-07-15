@@ -92,24 +92,14 @@ namespace SlotsSlotsSlots
 
                                 if ((deepCopySpell.Description.ToString().Contains($"carry") || deepCopySpell.Description.ToString().Contains($"Carry")) && deepCopySpell.Description.ToString().Contains($"{(int)startingMagnitude}"))
                                 {
-                                    if ((int)e.Data.Magnitude != 1)
-                                    {
-                                        deepCopySpell.Description = deepCopySpell.Description
-                                            .ToString()
-                                            .Replace($"{(int)startingMagnitude}", $"{(int)e.Data.Magnitude}")
-                                            .Replace($"Carry Weight is", "Slots are")
-                                            .Replace($"Carry Weight", $"Slots");
-                                        Console.WriteLine($"{spell.EditorID.ToString()} was considered a CarryWeight altering Spell and the description, if needed, adjusted:\n \"{ deepCopySpell.Description}\"\n");
-                                    }
-                                    else
-                                    {
-                                        deepCopySpell.Description = deepCopySpell.Description
-                                            .ToString()
-                                            .Replace($"{(int)startingMagnitude}", $"{(int)e.Data.Magnitude}")
-                                            .Replace($"Carry Weight is", "Slots are")
-                                            .Replace($"Carry Weight", $"Slot");
-                                        Console.WriteLine($"{spell.EditorID.ToString()} was considered a CarryWeight altering Spell and the description, if needed, adjusted:\n \"{ deepCopySpell.Description}\"\n");
-                                    }
+                                    deepCopySpell.Description = deepCopySpell.Description
+                                        .ToString()
+                                        .Replace($"{(int)startingMagnitude}", $"{(int)e.Data.Magnitude}")
+                                        .Replace($"Carry Weight is", "Slots are")
+                                        .Replace($"Carry Weight", $"Number of Slots")
+                                        .Replace($"carry weight is", "slots are")
+                                        .Replace($"carry weight", $"number of slots");
+                                    Console.WriteLine($"{spell.EditorID.ToString()} was considered a CarryWeight altering Spell and the description, if needed, adjusted:\n \"{ deepCopySpell.Description}\"\n");
                                 }
                                 state.PatchMod.Spells.Set(deepCopySpell);
                             }
@@ -144,28 +134,17 @@ namespace SlotsSlotsSlots
                                                     if ((deepCopyPerk.Description.ToString().Contains($"carry") || deepCopyPerk.Description.ToString().Contains($"Carry")) && deepCopyPerk.Description.ToString().Contains($"{magnitude}"))
                                                     {
                                                         int slots = (int)(magnitude * effectMultiplier);
-                                                        if (slots != 1)
-                                                        {
-                                                            deepCopyPerk.Description = deepCopyPerk.Description
-                                                                .ToString()
-                                                                .Replace($" {magnitude} ", $" {slots} ")
-                                                                .Replace($" {magnitude}.", $" {slots}.")
-                                                                .Replace($" {magnitude},", $" {slots},")
-                                                                .Replace($"Carry Weight is", "Slots are")
-                                                                .Replace($"Carry Weight", $"Slots");
-                                                            Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and the description, if needed, adjusted:\n \"{ deepCopyPerk.Description}\"\n");
-                                                        }
-                                                        else
-                                                        {
-                                                            deepCopyPerk.Description = deepCopyPerk.Description
-                                                                .ToString()
-                                                                .Replace($" {magnitude} ", $" {slots} ")
-                                                                .Replace($" {magnitude}.", $" {slots}.")
-                                                                .Replace($" {magnitude},", $" {slots},")
-                                                                .Replace($"Carry Weight is", "Slots are")
-                                                                .Replace($"Carry Weight", $"Slot");
-                                                            Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and the description, if needed, adjusted:\n \"{ deepCopyPerk.Description}\"\n");
-                                                        }
+                                                        deepCopyPerk.Description = deepCopyPerk.Description
+                                                            .ToString()
+                                                            .Replace($" {magnitude} ", $" {slots} ")
+                                                            .Replace($" {magnitude}.", $" {slots}.")
+                                                            .Replace($" {magnitude},", $" {slots},")
+                                                            .Replace($"Carry Weight is", "Slots are")
+                                                            .Replace($"Carry Weight", $"Number of Slots")
+                                                            .Replace($"carry weight is", "slots are")
+                                                            .Replace($"carry weight", $"number of slots");
+                                                        Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and the description, if needed, adjusted:\n \"{ deepCopyPerk.Description}\"\n");
+
                                                         state.PatchMod.Perks.Set(deepCopyPerk);
                                                     }
                                                 }
@@ -372,12 +351,20 @@ namespace SlotsSlotsSlots
                 if (e.Archetype.ActorValue.Equals(ActorValue.CarryWeight))
                 {
                     foundCarryWeight.Add(e.AsLink());
-                    var deepCopyEffect = e.DeepCopy()
-                    deepCopyEffect.Description = deepCopyEffect.Description
-                                                               .ToString()
-                                                               .Replace($"Carry Weight is", "Slots are")
-                                                               .Replace($"Carry Weight", $"Number of Slots");
-
+                    var deepCopyEffect = e.DeepCopy();
+                    if (deepCopyEffect.Description.ToString().Contains("carry") || deepCopyEffect.Description.ToString().Contains("Carry"))
+                    {
+                        deepCopyEffect.Description = deepCopyEffect.Description
+                                .ToString()
+                                .Replace("points from Carry Weight", "of your Slots")
+                                .Replace($"Carry Weight is", "Slots are")
+                                .Replace($"Carry Weight", $"Number of Slots")
+                                .Replace($"carry weight is", "slots are")
+                                .Replace($"carry weight", $"number of slots")
+                                .Replace($"points",$"slots")
+                                .Replace($"Points", $"Slots");
+                        Console.WriteLine($"{deepCopyEffect} is altering Carry Weight, and its description was changed to:\n\"{deepCopyEffect.Description}\"\n");
+                    }
                 }
                 if (e.Archetype.ActorValue.Equals(ActorValue.Health)
                     && !e.Flags.HasFlag(MagicEffect.Flag.Hostile)
