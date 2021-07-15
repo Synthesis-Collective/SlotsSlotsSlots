@@ -376,7 +376,7 @@ namespace SlotsSlotsSlots
                     deepCopyEffect.Description = deepCopyEffect.Description
                                                                .ToString()
                                                                .Replace($"Carry Weight is", "Slots are")
-                                                               .Replace($"Carry Weight", $"Slot");
+                                                               .Replace($"Carry Weight", $"Number of Slots");
 
                 }
                 if (e.Archetype.ActorValue.Equals(ActorValue.Health)
