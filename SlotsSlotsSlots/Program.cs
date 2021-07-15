@@ -372,6 +372,12 @@ namespace SlotsSlotsSlots
                 if (e.Archetype.ActorValue.Equals(ActorValue.CarryWeight))
                 {
                     foundCarryWeight.Add(e.AsLink());
+                    var deepCopyEffect = e.DeepCopy()
+                    deepCopyEffect.Description = deepCopyEffect.Description
+                                                               .ToString()
+                                                               .Replace($"Carry Weight is", "Slots are")
+                                                               .Replace($"Carry Weight", $"Slot");
+
                 }
                 if (e.Archetype.ActorValue.Equals(ActorValue.Health)
                     && !e.Flags.HasFlag(MagicEffect.Flag.Hostile)
