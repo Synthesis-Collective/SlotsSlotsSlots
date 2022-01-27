@@ -29,8 +29,15 @@ namespace SlotsSlotsSlots
         [SynthesisDescription("This alters the weigth of any scroll in the game, to set much slots 1 scroll should take up.")]
         [SynthesisTooltip("This alters the weigth of any scroll in the game, to set much slots 1 scroll should take up.\nA value of 0.5 makes it, so 2 scrolls are needed to fill 1 slot.")]
         public float ScrollSlotUse = 0.5f;
+        
         [SynthesisOrder]
-        [SynthesisSettingName("Weigthless items can't heal")]
+        [SynthesisSettingName("Use Base Multiplier instead of making lesser items weightless")]
+        [SynthesisDescription("Uses the base multiplier to scale all lesser items I prefer weightless.")]
+        [SynthesisTooltip("Uses the base multiplier to scale all lesser items I prefer weightless.")]
+        public bool UseBaseMult = false;
+        
+        [SynthesisOrder]
+        [SynthesisSettingName("No healing from lesser items")]
         [SynthesisDescription("This disables the healing effect from any item that isn't a potion, as they are excluded from the slot system.")]
         [SynthesisTooltip("This disables the healing effect from any item that isn't a potion, as they are excluded from the slot system.")]
         public bool WeightlessItemsOfferNoHealing = true;

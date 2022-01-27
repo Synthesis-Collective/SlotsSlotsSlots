@@ -34,6 +34,7 @@ namespace SlotsSlotsSlots
             float effectMultiplier = Settings.CarryweightEffectMultiplier;
             float potionWeights = Settings.PotionSlotUse;
             float scrollWeights = Settings.ScrollSlotUse;
+            bool useBaseMult = Settings.UseBaseMult;
             bool noHealFromWeightless = Settings.WeightlessItemsOfferNoHealing;
             int minWeaponSlots = Settings.MinimumUsedWeaponSlots;
             int maxWeaponSlots = Settings.MaximumUsedWeaponSlots;
@@ -164,7 +165,7 @@ namespace SlotsSlotsSlots
                 state.LoadOrder.PriorityOrder.MiscItem().WinningOverrides()
                     .Where(m => m.Weight != 0.0f)
                     .Select(m => m.DeepCopy())
-                    .Do(m => m.Weight = 0.0f));
+                    .Do(m => m.Weight = (useBaseMult) ? m.Weight*baseCarryWeightMult : 0.0f));
 
             state.PatchMod.Scrolls.Set(
                 state.LoadOrder.PriorityOrder.Scroll().WinningOverrides()
@@ -181,7 +182,7 @@ namespace SlotsSlotsSlots
                 }
                 else if (!ingestible.EditorID.Equals("dunSleepingTreeCampSap"))
                 {
-                    ingestibleCopy.Weight = 0.0f;
+                    ingestibleCopy.Weight = (useBaseMult) ? ingestibleCopy.Weight*baseCarryWeightMult : 0.0f;
                 }
                 foreach (var carryWeightEffect in magicEffects.carryWeight)
                 {
@@ -219,7 +220,7 @@ namespace SlotsSlotsSlots
             foreach (var ingredient in state.LoadOrder.PriorityOrder.Ingredient().WinningOverrides())
             {           
                 var ingredientCopy = ingredient.DeepCopy();
-                ingredientCopy.Weight = 0.0f;
+                ingredientCopy.Weight = (useBaseMult) ? ingredientCopy.Weight*baseCarryWeightMult : 0.0f;
                 foreach (var carryWeightEffect in magicEffects.carryWeight)
                 {
                     foreach (var effect in ingredientCopy.Effects)
@@ -267,19 +268,19 @@ namespace SlotsSlotsSlots
                 state.LoadOrder.PriorityOrder.Book().WinningOverrides()
                     .Where(m => m.Weight != 0.0f)
                     .Select(m => m.DeepCopy())
-                    .Do(m => m.Weight = 0.0f));
+                    .Do(m => m.Weight = (useBaseMult) ? m.Weight*baseCarryWeightMult : 0.0f));
 
             state.PatchMod.Ammunitions.Set(
                 state.LoadOrder.PriorityOrder.Ammunition().WinningOverrides()
                     .Where(m => m.Weight != 0.0f)
                     .Select(m => m.DeepCopy())
-                    .Do(m => m.Weight = 0.0f));
+                    .Do(m => m.Weight = (useBaseMult) ? m.Weight*baseCarryWeightMult : 0.0f));
 
             state.PatchMod.SoulGems.Set(
                 state.LoadOrder.PriorityOrder.SoulGem().WinningOverrides()
                     .Where(m => m.Weight != 0.0f)
                     .Select(m => m.DeepCopy())
-                    .Do(m => m.Weight = 0.0f));
+                    .Do(m => m.Weight = (useBaseMult) ? m.Weight*baseCarryWeightMult : 0.0f));
 
             var weapons = state.LoadOrder.PriorityOrder.Weapon().WinningOverrides();
             var weaponWeights = weapons
