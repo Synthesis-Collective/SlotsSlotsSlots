@@ -43,7 +43,7 @@ namespace SlotsSlotsSlots
             state.PatchMod.Races.Set(
                 state.LoadOrder.PriorityOrder.Race().WinningOverrides()
                     .Where(r => r.HasKeyword(Skyrim.Keyword.ActorTypeNPC)
-                        && !r.EditorID.Equals("TestRace"))
+                        && !(r.EditorID?.Equals("TestRace") ?? false))
                     .Select(r => r.DeepCopy())
                     .Do(r =>
                     {
@@ -62,7 +62,7 @@ namespace SlotsSlotsSlots
 
             foreach (var spell in state.LoadOrder.PriorityOrder.Spell().WinningOverrides())
             {
-                if (!spell.EditorID.ToString().Equals("AbDragon")) { 
+                if (!(spell.EditorID?.Equals("AbDragon") ?? false)) { 
                     var deepCopySpell = spell.DeepCopy();
                     foreach (var e in deepCopySpell.Effects)
                     {
@@ -70,8 +70,9 @@ namespace SlotsSlotsSlots
                         {
                             if (e.BaseEffect.Equals(carryWeightEffect))
                             {
-                                float startingMagnitude = e.Data.Magnitude;
+                                float startingMagnitude = e.Data?.Magnitude ?? 0;
 
+                                e.Data ??= new();
                                 e.Data.Magnitude *= effectMultiplier;
 
                                 SpellAndEffects.GetOrAdd(spell.FormKey).Add(e.BaseEffect.FormKey);
@@ -99,7 +100,7 @@ namespace SlotsSlotsSlots
                                         .Replace($"Carry Weight", $"Number of Slots")
                                         .Replace($"carry weight is", "slots are")
                                         .Replace($"carry weight", $"number of slots");
-                                    Console.WriteLine($"{spell.EditorID.ToString()} was considered a CarryWeight altering Spell and the description, if needed, adjusted:\n \"{ deepCopySpell.Description}\"\n");
+                                    Console.WriteLine($"{spell.EditorID} was considered a CarryWeight altering Spell and the description, if needed, adjusted:\n \"{ deepCopySpell.Description}\"\n");
                                 }
                                 state.PatchMod.Spells.Set(deepCopySpell);
                             }
@@ -143,7 +144,7 @@ namespace SlotsSlotsSlots
                                                             .Replace($"Carry Weight", $"Number of Slots")
                                                             .Replace($"carry weight is", "slots are")
                                                             .Replace($"carry weight", $"number of slots");
-                                                        Console.WriteLine($"{perk.EditorID.ToString()} was considered a CarryWeight altering Perk and the description, if needed, adjusted:\n \"{ deepCopyPerk.Description}\"\n");
+                                                        Console.WriteLine($"{perk.EditorID} was considered a CarryWeight altering Perk and the description, if needed, adjusted:\n \"{ deepCopyPerk.Description}\"\n");
 
                                                         state.PatchMod.Perks.Set(deepCopyPerk);
                                                     }
@@ -179,7 +180,7 @@ namespace SlotsSlotsSlots
                 {
                     ingestibleCopy.Weight = potionWeights;
                 }
-                else if (!ingestible.EditorID.Equals("dunSleepingTreeCampSap"))
+                else if (!(ingestible.EditorID?.Equals("dunSleepingTreeCampSap") ?? false))
                 {
                     ingestibleCopy.Weight = 0.0f;
                 }
@@ -189,6 +190,7 @@ namespace SlotsSlotsSlots
                     {
                         if (carryWeightEffect.Equals(effect.BaseEffect))
                         {
+                            effect.Data ??= new();
                             effect.Data.Magnitude *= effectMultiplier;
                         }
                     }
@@ -203,8 +205,9 @@ namespace SlotsSlotsSlots
                             if (healthEffect.Equals(e.BaseEffect)
                             &&
                             !(ingestible.HasKeyword(Skyrim.Keyword.VendorItemPotion)
-                            || ingestible.EditorID.Equals("dunSleepingTreeCampSap")))
+                            || (ingestible.EditorID?.Equals("dunSleepingTreeCampSap") ?? false)))
                             {
+                                e.Data ??= new();
                                 e.Data.Magnitude = 0;
                             }
                         }
@@ -226,6 +229,7 @@ namespace SlotsSlotsSlots
                     {
                         if (carryWeightEffect.Equals(effect.BaseEffect))
                         {
+                            effect.Data ??= new();
                             effect.Data.Magnitude *= effectMultiplier;
                         }
                     }
@@ -239,6 +243,7 @@ namespace SlotsSlotsSlots
                         {
                             if (healthMagicEffect.Equals(e.BaseEffect))
                             {
+                                e.Data ??= new();
                                 e.Data.Magnitude = 0;
                             }
                         }
@@ -256,6 +261,7 @@ namespace SlotsSlotsSlots
                     {
                         if (carryWeightEffect.Equals(e.BaseEffect))
                         {
+                            e.Data ??= new();
                             e.Data.Magnitude *= effectMultiplier;
                             state.PatchMod.ObjectEffects.Set(objectEffectCopy);
                         }
@@ -289,10 +295,12 @@ namespace SlotsSlotsSlots
 
             foreach (var weapon in weapons)
             {
+                if (weapon.BasicStats == null) continue;
                 var calculatedWeight = FindWeight(weaponDistributions, weapon.BasicStats.Weight);
-                if (weapon.BasicStats.Weight == 0 || weapon.BasicStats.Weight == calculatedWeight) continue;
+                if (weapon.BasicStats.Weight == 0 || weapon.BasicStats.Weight.EqualsWithin(calculatedWeight)) continue;
 
                 var weaponCopy = weapon.DeepCopy();
+                weaponCopy.BasicStats ??= new();
                 weaponCopy.BasicStats.Weight = calculatedWeight;
                 state.PatchMod.Weapons.Set(weaponCopy);
             }
@@ -352,7 +360,7 @@ namespace SlotsSlotsSlots
                 {
                     foundCarryWeight.Add(e.AsLink());
                     var deepCopyEffect = e.DeepCopy();
-                    if (deepCopyEffect.Description.ToString().Contains("carry") || deepCopyEffect.Description.ToString().Contains("Carry"))
+                    if (deepCopyEffect.Description?.String?.ContainsInsensitive("carry") ?? false)
                     {
                         deepCopyEffect.Description = deepCopyEffect.Description
                                 .ToString()
@@ -368,7 +376,7 @@ namespace SlotsSlotsSlots
                 }
                 if (e.Archetype.ActorValue.Equals(ActorValue.Health)
                     && !e.Flags.HasFlag(MagicEffect.Flag.Hostile)
-                    && !e.Description.String.IsNullOrWhitespace())
+                    && !(e.Description?.String).IsNullOrWhitespace())
                 {
                     foundHealth.Add(e.AsLink());
                 }
