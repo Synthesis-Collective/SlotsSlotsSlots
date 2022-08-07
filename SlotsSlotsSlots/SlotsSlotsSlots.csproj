@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
@@ -10,8 +10,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Mutagen.Bethesda.FormKeys.SkyrimSE" Version="2.1.0" />
-      <PackageReference Include="Mutagen.Bethesda.Synthesis" Version="0.22.1" />
+      <PackageReference Include="Mutagen.Bethesda.FormKeys.SkyrimSE" Version="3.0.0" />
+      <PackageReference Include="Mutagen.Bethesda.Synthesis" Version="0.23.7" />
       <PackageReference Include="System.Collections" Version="4.3.0" />
     </ItemGroup>
 
