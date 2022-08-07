@@ -45,9 +45,8 @@ namespace SlotsSlotsSlots
 
             state.PatchMod.Races.Set(
                 state.LoadOrder.PriorityOrder.Race().WinningOverrides()
-                    .Where(r => r.EditorID != null
-                                && r.HasKeyword(Skyrim.Keyword.ActorTypeNPC) 
-                                && !r.EditorID.Equals("TestRace"))
+                    .Where(r => r.HasKeyword(Skyrim.Keyword.ActorTypeNPC)
+                        && !(r.EditorID?.Equals("TestRace") ?? false))
                     .Select(r => r.DeepCopy())
                     .Do(r => { r.BaseCarryWeight *= baseCarryWeightMult; })
             );
@@ -66,8 +65,7 @@ namespace SlotsSlotsSlots
 
             foreach (var spell in state.LoadOrder.PriorityOrder.Spell().WinningOverrides())
             {
-                if (!spell.EditorID.Equals("AbDragon"))
-                {
+                if (!(spell.EditorID?.Equals("AbDragon") ?? false)) { 
                     var deepCopySpell = spell.DeepCopy();
                     foreach (var e in deepCopySpell.Effects)
                     {
@@ -75,8 +73,9 @@ namespace SlotsSlotsSlots
                         {
                             if (e.BaseEffect.Equals(carryWeightEffect))
                             {
-                                var startingMagnitude = e.Data.Magnitude;
+                                var startingMagnitude = e.Data?.Magnitude ?? 0;
 
+                                e.Data ??= new();
                                 e.Data.Magnitude *= effectMultiplier;
 
                                 spellAndEffects.GetOrAdd(spell.FormKey).Add(e.BaseEffect.FormKey);
@@ -186,7 +185,7 @@ namespace SlotsSlotsSlots
                 {
                     ingestibleCopy.Weight = potionWeights;
                 }
-                else if (!ingestible.EditorID.Equals("dunSleepingTreeCampSap"))
+                else if (!(ingestible.EditorID?.Equals("dunSleepingTreeCampSap") ?? false))
                 {
                     ingestibleCopy.Weight = (useBaseMult) ? ingestibleCopy.Weight * baseCarryWeightMult : 0.0f;
                 }
@@ -197,6 +196,7 @@ namespace SlotsSlotsSlots
                     {
                         if (carryWeightEffect.Equals(effect.BaseEffect))
                         {
+                            effect.Data ??= new();
                             effect.Data.Magnitude *= effectMultiplier;
                         }
                     }
@@ -209,10 +209,11 @@ namespace SlotsSlotsSlots
                         foreach (var e in ingestibleCopy.Effects)
                         {
                             if (healthEffect.Equals(e.BaseEffect)
-                                &&
-                                !(ingestible.HasKeyword(Skyrim.Keyword.VendorItemPotion)
-                                  || ingestible.EditorID.Equals("dunSleepingTreeCampSap")))
+                            &&
+                            !(ingestible.HasKeyword(Skyrim.Keyword.VendorItemPotion)
+                            || (ingestible.EditorID?.Equals("dunSleepingTreeCampSap") ?? false)))
                             {
+                                e.Data ??= new();
                                 e.Data.Magnitude = 0;
                             }
                         }
@@ -233,6 +234,7 @@ namespace SlotsSlotsSlots
                     {
                         if (carryWeightEffect.Equals(effect.BaseEffect))
                         {
+                            effect.Data ??= new();
                             effect.Data.Magnitude *= effectMultiplier;
                         }
                     }
@@ -246,6 +248,7 @@ namespace SlotsSlotsSlots
                         {
                             if (healthMagicEffect.Equals(e.BaseEffect))
                             {
+                                e.Data ??= new();
                                 e.Data.Magnitude = 0;
                             }
                         }
@@ -264,6 +267,7 @@ namespace SlotsSlotsSlots
                     {
                         if (carryWeightEffect.Equals(e.BaseEffect))
                         {
+                            e.Data ??= new();
                             e.Data.Magnitude *= effectMultiplier;
                             state.PatchMod.ObjectEffects.Set(objectEffectCopy);
                         }
@@ -298,10 +302,12 @@ namespace SlotsSlotsSlots
 
             foreach (var weapon in weaponGetters)
             {
+                if (weapon.BasicStats == null) continue;
                 var calculatedWeight = FindWeight(weaponDistributions, weapon.BasicStats.Weight);
                 if (weapon.BasicStats.Weight == 0 || Math.Abs(weapon.BasicStats.Weight - (calculatedWeight)) < Tolerance) continue;
 
                 var weaponCopy = weapon.DeepCopy();
+                weaponCopy.BasicStats ??= new();
                 weaponCopy.BasicStats.Weight = calculatedWeight;
                 state.PatchMod.Weapons.Set(weaponCopy);
             }
