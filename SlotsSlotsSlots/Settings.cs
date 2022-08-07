@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Mutagen.Bethesda.Synthesis.Settings;
+﻿using Mutagen.Bethesda.Synthesis.Settings;
 
 namespace SlotsSlotsSlots
 {
@@ -13,7 +8,7 @@ namespace SlotsSlotsSlots
         [SynthesisSettingName("Race Carry Weight Multiplier")]
         [SynthesisDescription("This multiplies only the base value, the stat will still be upgraded on levelup, and with perks/spells/enchantments.")]
         [SynthesisTooltip("This multiplies only the base value,the stat will still be upgraded on levelup, and with perks/spells/enchantments.")]
-        public float BaseMultiplier = 0.1f;
+        public float RaceCarryweightMultiplier = 0.1f;
         [SynthesisOrder]
         [SynthesisSettingName("Carry Weight Effect Multiplier")]
         [SynthesisDescription("This is a value all loaded effects that alter carryweight get multiplied with to make them work with the lower weigth values of the slot system.")]
@@ -31,10 +26,12 @@ namespace SlotsSlotsSlots
         public float ScrollSlotUse = 0.5f;
         
         [SynthesisOrder]
-        [SynthesisSettingName("Use Base Multiplier instead of making lesser items weightless")]
-        [SynthesisDescription("Uses the base multiplier to scale all lesser items I prefer weightless.")]
-        [SynthesisTooltip("Uses the base multiplier to scale all lesser items I prefer weightless.")]
-        public bool UseBaseMult = false;
+        [SynthesisSettingName("Use Race Multiplier instead of making misc items weightless")]
+        [SynthesisDescription("Uses the base multiplier to scale all misc items." +
+                              "\nDefault is not to use this and making items weightless.")]
+        [SynthesisTooltip("Uses the base multiplier to scale all misc items." +
+                          "\nDefault is not to use this and making items weightless.")]
+        public bool UseRaceMult = false;
         
         [SynthesisOrder]
         [SynthesisSettingName("No healing from lesser items")]
@@ -46,19 +43,19 @@ namespace SlotsSlotsSlots
         [SynthesisSettingName("Minimum Weaponslots")]
         [SynthesisDescription("This is the number of slots the lightest weapons will need.")]
         [SynthesisTooltip("This is the number of slots the lightest weapons will need.")]
-        public int MinimumUsedWeaponSlots = 1;
+        public short MinimumUsedWeaponSlots = 1;
         [SynthesisOrder]
         [SynthesisSettingName("Maximum Weaponslots")]
         [SynthesisDescription("This is the number of slots the heaviest weapons will need.")]
         [SynthesisTooltip("This is the number of slots the heaviest weapons will need.")]
-        public int MaximumUsedWeaponSlots = 3;
+        public short MaximumUsedWeaponSlots = 3;
         [SynthesisSettingName("Minimum Clothingslots")]
         [SynthesisDescription("This is the number of slots the lightest clothing will need.\nThis includes Jewelry and Shields.")]
         [SynthesisTooltip("This is the number of slots the lightest clothing will need.\nThis includes Jewelry and Shields.")]
-        public int MinimumUsedArmorSlots = 1;
+        public short MinimumUsedArmorSlots = 1;
         [SynthesisSettingName("Maximum Clothingslots")]
         [SynthesisDescription("This is the number of slots the heaviest clothing will need.\nThis includes Jewelry and Shields.")]
         [SynthesisTooltip("This is the number of slots the heaviest clothing will need.\nThis includes Jewelry and Shields.")]
-        public int MaximumUsedArmorSlots = 6;
+        public short MaximumUsedArmorSlots = 6;
     }
 }
