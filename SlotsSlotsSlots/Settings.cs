@@ -34,12 +34,6 @@ namespace SlotsSlotsSlots
         public bool UseRaceMult = false;
         
         [SynthesisOrder]
-        [SynthesisSettingName("No healing from lesser items")]
-        [SynthesisDescription("This disables the healing effect from any item that isn't a potion, as they are excluded from the slot system.")]
-        [SynthesisTooltip("This disables the healing effect from any item that isn't a potion, as they are excluded from the slot system.")]
-        public bool WeightlessItemsOfferNoHealing = true;
-
-        [SynthesisOrder]
         [SynthesisSettingName("Minimum Weaponslots")]
         [SynthesisDescription("This is the number of slots the lightest weapons will need.")]
         [SynthesisTooltip("This is the number of slots the lightest weapons will need.")]

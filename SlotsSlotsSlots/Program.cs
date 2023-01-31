@@ -37,7 +37,6 @@ namespace SlotsSlotsSlots
             var potionWeights = Settings.PotionSlotUse;
             var scrollWeights = Settings.ScrollSlotUse;
             var useBaseMult = Settings.UseRaceMult;
-            var noHealFromWeightless = Settings.WeightlessItemsOfferNoHealing;
             var minWeaponSlots = Settings.MinimumUsedWeaponSlots;
             var maxWeaponSlots = Settings.MaximumUsedWeaponSlots;
             var minArmorslots = Settings.MinimumUsedArmorSlots;
@@ -117,7 +116,7 @@ namespace SlotsSlotsSlots
                 }
             }
 
-            // The following could profit from optimization, way to many foreach loops.
+            // The following could probably profit from optimization, way to many foreach loops.
 
             foreach (var perk in state.LoadOrder.PriorityOrder.Perk().WinningOverrides())
             {
@@ -129,36 +128,31 @@ namespace SlotsSlotsSlots
                     {
                         foreach (var carryWeightSpell in carryWeightSpells)
                         {
-                            if (carryWeightSpell.SpellAndEffects.TryGetValue(fl.FormKey, out var spellEffectSet))
+                            if (!carryWeightSpell.SpellAndEffects.TryGetValue(fl.FormKey, out var spellEffectSet))
+                                continue;
+                            foreach (var spellEffect in spellEffectSet)
                             {
-                                foreach (var spellEffect in spellEffectSet)
+                                if (!carryWeightSpell.EffectAndMagnitudes.TryGetValue(spellEffect,
+                                        out var magnitudesList)) continue;
+                                foreach (var magnitude in magnitudesList)
                                 {
-                                    if (carryWeightSpell.EffectAndMagnitudes.TryGetValue(spellEffect,
-                                            out var magnitudesList))
-                                    {
-                                        foreach (var magnitude in magnitudesList)
-                                        {
-                                            if ((deepCopyPerk.Description.ToString().Contains($"carry") ||
-                                                 deepCopyPerk.Description.ToString().Contains($"Carry")) &&
-                                                deepCopyPerk.Description.ToString().Contains($"{magnitude}"))
-                                            {
-                                                var slots = (int) (magnitude * effectMultiplier);
-                                                deepCopyPerk.Description = deepCopyPerk.Description
-                                                    .ToString()
-                                                    .Replace($" {magnitude} ", $" {slots} ")
-                                                    .Replace($" {magnitude}.", $" {slots}.")
-                                                    .Replace($" {magnitude},", $" {slots},")
-                                                    .Replace($"Carry Weight is", "Slots are")
-                                                    .Replace($"Carry Weight", $"Number of Slots")
-                                                    .Replace($"carry weight is", "slots are")
-                                                    .Replace($"carry weight", $"number of slots");
-                                                Console.WriteLine(
-                                                    $"{perk.EditorID} was considered a CarryWeight altering Perk and the description, if needed, adjusted:\n \"{deepCopyPerk.Description}\"\n");
+                                    if (!deepCopyPerk.Description.ToString()
+                                            .Contains($"carry", StringComparison.OrdinalIgnoreCase) ||
+                                        !deepCopyPerk.Description.ToString().Contains($"{magnitude}")) continue;
+                                    var slots = (int) (magnitude * effectMultiplier);
+                                    deepCopyPerk.Description = deepCopyPerk.Description
+                                        .ToString()
+                                        .Replace($" {magnitude} ", $" {slots} ")
+                                        .Replace($" {magnitude}.", $" {slots}.")
+                                        .Replace($" {magnitude},", $" {slots},")
+                                        .Replace($"Carry Weight is", "Slots are")
+                                        .Replace($"Carry Weight", $"Number of Slots")
+                                        .Replace($"carry weight is", "slots are")
+                                        .Replace($"carry weight", $"number of slots");
+                                    Console.WriteLine(
+                                        $"{perk.EditorID} was considered a CarryWeight altering Perk and the description, if needed, adjusted:\n \"{deepCopyPerk.Description}\"\n");
 
-                                                state.PatchMod.Perks.Set(deepCopyPerk);
-                                            }
-                                        }
-                                    }
+                                    state.PatchMod.Perks.Set(deepCopyPerk);
                                 }
                             }
                         }
@@ -187,36 +181,16 @@ namespace SlotsSlotsSlots
                 }
                 else if (!(ingestible.EditorID?.Equals("dunSleepingTreeCampSap") ?? false))
                 {
-                    ingestibleCopy.Weight = (useBaseMult) ? ingestibleCopy.Weight * baseCarryWeightMult : 0.0f;
+                    ingestibleCopy.Weight *= baseCarryWeightMult;
                 }
 
                 foreach (var carryWeightEffect in magicEffects.carryWeight)
                 {
                     foreach (var effect in ingestibleCopy.Effects)
                     {
-                        if (carryWeightEffect.Equals(effect.BaseEffect))
-                        {
-                            effect.Data ??= new();
-                            effect.Data.Magnitude *= effectMultiplier;
-                        }
-                    }
-                }
-
-                if (noHealFromWeightless)
-                {
-                    foreach (var healthEffect in magicEffects.health)
-                    {
-                        foreach (var e in ingestibleCopy.Effects)
-                        {
-                            if (healthEffect.Equals(e.BaseEffect)
-                            &&
-                            !(ingestible.HasKeyword(Skyrim.Keyword.VendorItemPotion)
-                            || (ingestible.EditorID?.Equals("dunSleepingTreeCampSap") ?? false)))
-                            {
-                                e.Data ??= new();
-                                e.Data.Magnitude = 0;
-                            }
-                        }
+                        if (!carryWeightEffect.Equals(effect.BaseEffect)) continue;
+                        effect.Data ??= new();
+                        effect.Data.Magnitude *= effectMultiplier;
                     }
                 }
 
@@ -227,7 +201,7 @@ namespace SlotsSlotsSlots
             foreach (var ingredient in state.LoadOrder.PriorityOrder.Ingredient().WinningOverrides())
             {
                 var ingredientCopy = ingredient.DeepCopy();
-                ingredientCopy.Weight = (useBaseMult) ? ingredientCopy.Weight * baseCarryWeightMult : 0.0f;
+                ingredientCopy.Weight = ingredientCopy.Weight * baseCarryWeightMult;
                 foreach (var carryWeightEffect in magicEffects.carryWeight)
                 {
                     foreach (var effect in ingredientCopy.Effects)
@@ -236,21 +210,6 @@ namespace SlotsSlotsSlots
                         {
                             effect.Data ??= new();
                             effect.Data.Magnitude *= effectMultiplier;
-                        }
-                    }
-                }
-
-                if (noHealFromWeightless)
-                {
-                    foreach (var healthMagicEffect in magicEffects.health)
-                    {
-                        foreach (var e in ingredientCopy.Effects)
-                        {
-                            if (healthMagicEffect.Equals(e.BaseEffect))
-                            {
-                                e.Data ??= new();
-                                e.Data.Magnitude = 0;
-                            }
                         }
                     }
                 }
